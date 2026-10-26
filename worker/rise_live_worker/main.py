@@ -16,6 +16,7 @@ def main():
     except Exception:
         pass
     config.check_or_exit()
+    config.install_user_agent()
     print("Rise Live worker %s - may %s -> %s (du lieu: %s)" % (config.AGENT_VERSION, config.MACHINE, config.URL, config.BASE))
     streams.kill_orphan_ffmpeg()
 

@@ -2,7 +2,10 @@
 import os
 import sys
 
-AGENT_VERSION = "v2.0"
+AGENT_VERSION = "v2.1"
+# User-Agent riêng cho mọi request của worker. UA mặc định "Python-urllib/3.x" bị Cloudflare
+# (Browser Integrity Check) chặn: HTTP 403 "error code: 1010".
+USER_AGENT = "Mozilla/5.0 (compatible; RiseLiveWorker/%s)" % AGENT_VERSION
 
 URL = os.environ.get("RISE_LIVE_URL", "").strip().rstrip("/")
 TOKEN = os.environ.get("RISE_LIVE_TOKEN", "").strip()
@@ -41,6 +44,14 @@ SYNC_RETRY_MAX = 3
 
 THUMB_SCAN_SEC = 60            # chụp ảnh + dò màn đen (tại VPS, không tốn máy chủ)
 THUMB_PUSH_DEFAULT = 300       # đẩy ảnh lên máy chủ (máy chủ chỉnh được qua thumbPushSec)
+
+
+def install_user_agent():
+    """Mọi urllib.request.urlopen/urlretrieve trong worker dùng chung opener này → luôn gửi USER_AGENT."""
+    import urllib.request
+    opener = urllib.request.build_opener()
+    opener.addheaders = [("User-Agent", USER_AGENT)]
+    urllib.request.install_opener(opener)
 
 
 def check_or_exit():

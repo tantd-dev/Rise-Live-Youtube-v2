@@ -10,7 +10,7 @@ import urllib.request
 
 from .media import sh, sh_ytdlp
 
-_UA = "Mozilla/5.0 (X11; Linux x86_64) RiseLiveWorker"
+_UA = "Mozilla/5.0 (X11; Linux x86_64) RiseLiveWorker"   # Google Drive: giữ UA dạng trình duyệt
 
 
 def _stream_to_file(resp, dest, on_progress, timeout):

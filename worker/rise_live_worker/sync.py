@@ -29,6 +29,8 @@ def sync():
     except urllib.error.HTTPError as e:
         detail = e.read().decode("utf-8", "ignore")[:200]
         hint = {404: " (may chua dang ky - kiem RISE_LIVE_MACHINE)", 401: " (sai ve - kiem RISE_LIVE_TOKEN)"}.get(e.code, "")
+        if e.code == 403 and "error code" in detail:   # trang lỗi của Cloudflare, không phải của app
+            hint = " (Cloudflare chan - worker cung VPS thi dat RISE_LIVE_URL=http://127.0.0.1:3000; hoac tat Browser Integrity Check / bat 'DNS only')"
         raise RuntimeError("HTTP %d%s %s" % (e.code, hint, detail))
     if uploads:   # máy chủ đã đăng ký → bỏ khỏi hàng chờ
         ids = {u["id"] for u in uploads}
