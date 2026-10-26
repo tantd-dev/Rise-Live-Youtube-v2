@@ -30,10 +30,10 @@ export function intakeBlock(m: Machine, minFreeGb: number, opts: { backupOnly?: 
     if (up > 0 && Number.isFinite(tx) && tx <= up * 1.05 && tx / up >= SAFETY_FACTOR)
       return `Máy "${m.name}" đã chạm ngưỡng ${Math.round(SAFETY_FACTOR * 100)}% băng thông (${Math.round(tx)}/${Math.round(up)} Mbps) — không nhận thêm video mới.`;
   }
-  const free = Number(m.diskFreeGb);
-  if (Number.isFinite(free) && m.diskFreeGb != null && free < minFreeGb)
-    return `Máy "${m.name}" chỉ còn ${Math.round(free)} GB trống (tối thiểu ${minFreeGb} GB) — không nhận thêm video.`;
-  return null;
+  // const free = Number(m.diskFreeGb);
+  // if (Number.isFinite(free) && m.diskFreeGb != null && free < minFreeGb)
+  //   return `Máy "${m.name}" chỉ còn ${Math.round(free)} GB trống (tối thiểu ${minFreeGb} GB) — không nhận thêm video.`;
+  // return null;
 }
 
 /** Số ngày tới hạn gia hạn thuê máy (âm = đã quá hạn). null nếu chưa nhập. */
