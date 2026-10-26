@@ -1,0 +1,15 @@
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+.env.local
+.env*.local
+# dữ liệu chạy thử
+.worker-data/
+.emulator-data/
+.firebase.local.json
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+__pycache__/
+*.pyc

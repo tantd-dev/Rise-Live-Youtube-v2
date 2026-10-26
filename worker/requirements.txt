@@ -1,0 +1,5 @@
+# Worker chỉ dùng thư viện chuẩn Python. Hai lệnh ngoài dưới đây để TẢI VIDEO TỪ GOOGLE DRIVE
+# (lui về khi cách tự tải không được). Google hay đổi cách tải → luôn cài bản MỚI NHẤT (-U).
+#   pip3 install -U -r requirements.txt   (Ubuntu 23.04+: thêm --break-system-packages)
+yt-dlp>=2025.1.1
+gdown>=5.2.0
