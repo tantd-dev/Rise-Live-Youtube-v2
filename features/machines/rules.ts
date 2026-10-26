@@ -33,7 +33,7 @@ export function intakeBlock(m: Machine, minFreeGb: number, opts: { backupOnly?: 
   // const free = Number(m.diskFreeGb);
   // if (Number.isFinite(free) && m.diskFreeGb != null && free < minFreeGb)
   //   return `Máy "${m.name}" chỉ còn ${Math.round(free)} GB trống (tối thiểu ${minFreeGb} GB) — không nhận thêm video.`;
-  // return null;
+  return null;
 }
 
 /** Số ngày tới hạn gia hạn thuê máy (âm = đã quá hạn). null nếu chưa nhập. */
