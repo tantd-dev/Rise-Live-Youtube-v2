@@ -30,11 +30,11 @@ export async function runAlertJob(): Promise<{ active: number; emailed: number; 
 }
 
 async function sendEmail(alerts: Alert[]) {
-  const html = `<p>Rise Live có ${alerts.length} sự cố cần xử lý:</p><ul>${alerts.map((a) => `<li><b>[${a.code}]</b> ${escapeHtml(a.text)}</li>`).join("")}</ul><p><a href="${env.appBaseUrl()}">Mở Rise Live</a></p>`;
+  const html = `<p>AB Live có ${alerts.length} sự cố cần xử lý:</p><ul>${alerts.map((a) => `<li><b>[${a.code}]</b> ${escapeHtml(a.text)}</li>`).join("")}</ul><p><a href="${env.appBaseUrl()}">Mở AB Live</a></p>`;
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${env.resendKey()}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: env.emailFrom(), to: env.alertEmails(), subject: `[Rise Live] ${alerts.length} sự cố cần xử lý`, html }),
+    body: JSON.stringify({ from: env.emailFrom(), to: env.alertEmails(), subject: `[AB Live] ${alerts.length} sự cố cần xử lý`, html }),
   });
   if (!r.ok) throw new Error(`Gửi email lỗi (${r.status}).`);
 }

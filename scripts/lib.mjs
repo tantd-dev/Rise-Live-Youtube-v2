@@ -30,7 +30,7 @@ export function portFree(port) {
 export async function requirePort(port, what, howToChange) {
   if (await portFree(port)) return;
   console.error(`\n✖ Cổng ${port} (${what}) đang bị chương trình khác dùng.`);
-  console.error("  Thường gặp: bản Rise Live CŨ đang chạy trong WSL (cổng 3000 / 8080 / 4000 / 8099) — tắt nó trước,");
+  console.error("  Thường gặp: bản AB Live CŨ đang chạy trong WSL (cổng 3000 / 8080 / 4000 / 8099) — tắt nó trước,");
   console.error(`  hoặc ${howToChange}\n`);
   process.exit(1);
 }

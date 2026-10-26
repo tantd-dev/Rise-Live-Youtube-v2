@@ -43,7 +43,7 @@ EOF
 chmod 600 /opt/rise-live/worker.env
 cat >/etc/systemd/system/rise-live.service <<'EOF'
 [Unit]
-Description=Rise Live Worker
+Description=AB Live Worker
 After=network-online.target
 Wants=network-online.target
 [Service]

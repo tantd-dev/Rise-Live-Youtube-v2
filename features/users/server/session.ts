@@ -50,7 +50,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 
 /** Bắt buộc đăng nhập (+ quyền nếu truyền). Ném HttpError 401/403 để route trả đúng mã. */
 export async function requireUser(perm: Permission = "view"): Promise<SessionUser> {
-  if (!env.liveEnabled()) throw new HttpError(503, "Rise Live đang tắt (đặt RISE_WORK_LIVE=1).");
+  if (!env.liveEnabled()) throw new HttpError(503, "AB Live đang tắt (đặt RISE_WORK_LIVE=1).");
   const user = await getSessionUser();
   if (!user) throw new HttpError(401, "Chưa đăng nhập.");
   if (!can(user, perm)) throw new HttpError(403, "Bạn không có quyền thực hiện thao tác này.");

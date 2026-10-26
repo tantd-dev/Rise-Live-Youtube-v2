@@ -25,7 +25,7 @@ const NUM_FIELDS = ["vcpu", "ramGb", "diskGb", "uploadMbps", "loadAvg", "diskFre
 const finite = (v: unknown) => v != null && Number.isFinite(Number(v));
 
 export async function handleAgentSync(body: AgentRequest, token: string): Promise<AgentResponse> {
-  if (!env.liveEnabled()) throw new HttpError(503, "Rise Live đang tắt (RISE_WORK_LIVE).");
+  if (!env.liveEnabled()) throw new HttpError(503, "AB Live đang tắt (RISE_WORK_LIVE).");
   if (!env.workerToken()) throw new HttpError(503, "Worker chưa cấu hình (thiếu RISE_LIVE_WORKER_TOKEN).");
   const machineId = String(body.machineId ?? "");
   if (!machineId) throw new HttpError(400, "Thiếu machineId.");

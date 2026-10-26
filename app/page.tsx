@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Page() {
   if (!env.liveEnabled()) {
-    return <main className="login"><div className="card"><h2>Rise Live đang tắt</h2><p>Đặt <code>RISE_WORK_LIVE=1</code> trong .env.local rồi khởi động lại.</p></div></main>;
+    return <main className="login"><div className="card"><h2>AB Live đang tắt</h2><p>Đặt <code>RISE_WORK_LIVE=1</code> trong .env.local rồi khởi động lại.</p></div></main>;
   }
   let user;
   try {

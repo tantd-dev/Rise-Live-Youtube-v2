@@ -1,4 +1,4 @@
-// Quản lý người dùng Rise Live (chỉ Quản trị).
+// Quản lý người dùng AB Live (chỉ Quản trị).
 import { db, COL, nowISO } from "@/lib/server/firestore";
 import { bad } from "@/lib/server/http";
 import { normalizeRole, type Role, type UserRow } from "../types";

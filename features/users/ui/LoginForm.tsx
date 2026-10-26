@@ -22,7 +22,7 @@ export function LoginForm({ devLogin }: { devLogin: boolean }) {
   return (
     <div className="login">
       <form className="card" onSubmit={submit}>
-        <h2>Rise Live</h2>
+        <h2>AB Live</h2>
         <label className="field"><span className="field-label">Email</span><input value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" /></label>
         <label className="field"><span className="field-label">Mật khẩu</span><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" /></label>
         {err && <p className="err">{err}</p>}

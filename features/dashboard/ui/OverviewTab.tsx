@@ -23,7 +23,7 @@ export function OverviewTab({ onGo }: { onGo: (tab: string) => void }) {
         <AlertList alerts={data.alerts} onPick={(a) => onGo(a.streamId ? "streams" : a.machineId ? "machines" : "assets")} />
       </Card>
 
-      <Card title="Cấu hình hệ thống">
+      {/* <Card title="Cấu hình hệ thống">
         <div className="chips">
           <Pill tone={data.config.autoFailover ? "green" : "gray"}>Tự cứu khi máy chết: {data.config.autoFailover ? "BẬT" : "tắt"}</Pill>
           <Pill tone={data.config.lease ? "green" : "gray"}>Tự dừng khi cô lập (lease): {data.config.lease ? "BẬT" : "tắt"}</Pill>
@@ -31,7 +31,7 @@ export function OverviewTab({ onGo }: { onGo: (tab: string) => void }) {
           <Pill tone={data.config.uploadEnabled ? "green" : "gray"}>Tải thẳng lên VPS: {data.config.uploadEnabled ? "có" : "chưa có RISE_LIVE_UPLOAD_TOKEN"}</Pill>
           <Pill tone="gray">RTMP: {data.config.rtmpBase}</Pill>
         </div>
-      </Card>
+      </Card> */}
 
       {data.failover && <FailoverSwitchCard sw={data.failover} />}
     </>

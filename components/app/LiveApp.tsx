@@ -38,7 +38,7 @@ function Shell() {
   return (
     <div className="app">
       <header className="topbar">
-        <b className="brand">Rise Live</b>
+        <b className="brand">AB Live</b>
         <nav className="tabs">
           {tabs.map((t) => (
             <button key={t.id} className={tab === t.id ? "tab on" : "tab"} onClick={() => go(t.id)}>

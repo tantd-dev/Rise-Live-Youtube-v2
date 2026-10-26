@@ -37,7 +37,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def _authorized(self, q):
         return bool(config.UPLOAD_TOKEN) and q.get("token", [""])[0] == config.UPLOAD_TOKEN
 
-    def do_OPTIONS(self):   # CORS preflight cho trình duyệt (trang Rise Live khác host)
+    def do_OPTIONS(self):   # CORS preflight cho trình duyệt (trang AB Live khác host)
         self.send_response(204)
         self._cors()
         self.send_header("Access-Control-Allow-Methods", "PUT, GET, OPTIONS")

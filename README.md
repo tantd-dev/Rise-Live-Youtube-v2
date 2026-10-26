@@ -1,6 +1,6 @@
-# Rise Live V2
+# AB Live V2
 
-Hệ phát trực tiếp 24/7 lên YouTube từ nhiều VPS — viết lại từ Rise Live cũ, tách theo từng mảng nghiệp vụ
+Hệ phát trực tiếp 24/7 lên YouTube từ nhiều VPS — viết lại từ AB Live cũ, tách theo từng mảng nghiệp vụ
 để dễ đọc, dễ mở rộng và triển khai từng phần.
 
 ```
@@ -19,7 +19,7 @@ Các lệnh `npm run …` chạy được ngay trong **PowerShell** (Windows) l�
 - `worker` chỉ chạy trên Linux: gõ trong PowerShell thì script **tự gọi vào WSL bản `Ubuntu`** (không dùng bản WSL
   mặc định — trên máy này là `docker-desktop`, không có bash), và tự đổi `localhost` thành địa chỉ Windows nhìn từ WSL.
   Đổi bản WSL bằng `RISE_LIVE_WSL_DISTRO`. Trong Ubuntu cần `python3`, `ffmpeg`, `yt-dlp`, `gdown`.
-- Cổng đã bị chiếm (thường do **bản Rise Live cũ** đang chạy trong WSL ở 3000/8080/4000/8099) → script báo rõ và dừng.
+- Cổng đã bị chiếm (thường do **bản AB Live cũ** đang chạy trong WSL ở 3000/8080/4000/8099) → script báo rõ và dừng.
   Tắt bản cũ, hoặc đổi cổng: `FIRESTORE_EMULATOR_HOST=127.0.0.1:8180`, `RISE_LIVE_EMULATOR_UI_PORT=4100` trong
   `.env.local`; app: `$env:PORT=3100; npm run dev` (nhớ sửa `APP_BASE_URL` / `RISE_LIVE_URL` theo);
   worker: `RISE_LIVE_UPLOAD_PORT=8199`.
