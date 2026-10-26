@@ -73,9 +73,9 @@ def _prepare_run(asset):
 
     with state.lock:
         state.asset_local[aid] = {"status": "downloading", "working": True}
-    free = _free_gb()
-    if free is not None and free < config.SSD_MIN_FREE_GB:
-        raise RuntimeError("O cung chi con %.0fGB - chan tai video moi de bao ve luong dang phat. Xoa bot video." % free)
+    # free = _free_gb()
+    # if free is not None and free < config.SSD_MIN_FREE_GB:
+    #     raise RuntimeError("O cung chi con %.0fGB - chan tai video moi de bao ve luong dang phat. Xoa bot video." % free)
 
     # 1) Chép thẳng từ VPS khác (giữ nguyên chất lượng, không qua Drive).
     cf = asset.get("copyFrom") or {}
