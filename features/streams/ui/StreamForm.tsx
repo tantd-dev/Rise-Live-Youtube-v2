@@ -8,6 +8,7 @@ import { api } from "@/lib/client/api";
 import { fmtDuration } from "@/lib/client/format";
 import { checkStreamKey } from "../stream-key";
 import { checkWatchUrl } from "@/features/youtube/types";
+import { WatchUrlInput } from "@/features/youtube/ui/WatchUrlInput";
 import type { StreamView } from "../types";
 
 interface FormState {
@@ -66,8 +67,8 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
         <Field label="Khoá luồng YouTube" hint={keyErr ? <span className="err">{keyErr}</span> : stream ? "Để trống = giữ khoá cũ." : "YouTube Studio › Phát trực tiếp › Khoá luồng. RTMP đã đặt sẵn."}>
           <input value={f.streamKey} onChange={(e) => set("streamKey", e.target.value)} placeholder={stream ? stream.streamKeyMasked : "xxxx-xxxx-xxxx-xxxx-xxxx"} autoComplete="off" />
         </Field>
-        <Field label="Link xem buổi live trên YouTube" hint={watchErr ? <span className="err">{watchErr}</span> : "Dạng https://www.youtube.com/watch?v=… — để theo dõi buổi live bằng API."}>
-          <input value={f.watchUrl} onChange={(e) => set("watchUrl", e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
+        <Field label="Link xem buổi live trên YouTube" hint={watchErr ? <span className="err">{watchErr}</span> : "Chỉ cần dán MÃ buổi live — tự thành https://www.youtube.com/watch?v=<mã>."}>
+          <WatchUrlInput value={f.watchUrl} onChange={(v) => set("watchUrl", v)} />
         </Field>
         <Field label="Điều khiển">
           <select value={f.control} onChange={(e) => set("control", e.target.value)}>

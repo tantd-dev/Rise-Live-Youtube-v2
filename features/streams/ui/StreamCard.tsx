@@ -78,7 +78,7 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
             {!s.shouldBeLive && <button disabled={busy} onClick={onEdit}>✎ Sửa</button>}
             {s.shouldBeLive && !s.moveState && <button disabled={busy} onClick={onMove}>⇄ Chuyển máy</button>}
             <button disabled={busy} onClick={() => promptPatch("Tên luồng mới:", "name", s.name)}>Đổi tên</button>
-            <button disabled={busy} onClick={() => promptPatch("Link xem buổi live (youtube.com/watch?v=…):", "watchUrl", s.watchUrl ?? "")}>Link xem</button>
+            <button disabled={busy} onClick={() => promptPatch("Mã buổi live hoặc link YouTube (tự đổi thành youtube.com/watch?v=…):", "watchUrl", s.watchUrl ?? "")}>Link xem</button>
             {s.watchUrl && data?.config.ytApiKey && <button disabled={busy} onClick={() => run(() => api("/api/youtube/check", { body: { streamIds: [s.id] } }), "Đã kiểm YouTube.")}>Kiểm YouTube</button>}
             {s.black && <button disabled={busy} onClick={() => call("", { allowBlack: !s.allowBlack }, "Đã lưu.", "PATCH")}>{s.allowBlack ? "Bật lại cảnh báo đen" : "✓ Nền đen chủ ý"}</button>}
             {s.ytIssue
