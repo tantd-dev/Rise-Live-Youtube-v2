@@ -1,49 +1,64 @@
 "use client";
-// Form thêm / sửa máy.
-import { useState } from "react";
+// Form thêm / sửa máy phát.
+import { DatePicker, Form, Input, InputNumber, Modal, Select } from "antd";
+import dayjs, { type Dayjs } from "dayjs";
 import { useApp } from "@/components/app/AppContext";
-import { Field } from "@/components/ui/primitives";
-import { Modal } from "@/components/ui/Modal";
 import { api } from "@/lib/client/api";
-import type { MachineView } from "../types";
+import { MACHINE_ROLE_LABEL, type MachineView } from "../types";
+
+interface Values {
+  name: string; ip: string; role: string; provider: string; region: string;
+  uploadMbps: number | null; uploadHttpsUrl: string; costAmount: number | null; costPeriod: string; costRenewAt: Dayjs | null;
+}
 
 export function MachineForm({ machine, onClose, onCreated }: { machine?: MachineView; onClose: () => void; onCreated?: (id: string) => void }) {
   const { run, busy } = useApp();
-  const [f, setF] = useState({
+  const [form] = Form.useForm<Values>();
+  const initial: Values = {
     name: machine?.name ?? "", ip: machine?.ip ?? "", role: machine?.role ?? "stream-247", provider: machine?.provider ?? "", region: machine?.region ?? "",
-    uploadMbps: machine?.uploadMbpsManual ? String(machine.uploadMbps ?? "") : "", uploadHttpsUrl: machine?.uploadHttpsUrl ?? "",
-    costAmount: machine?.costAmount != null ? String(machine.costAmount) : "", costPeriod: machine?.costPeriod ?? "month", costRenewAt: machine?.costRenewAt ?? "",
-  });
-  const set = (k: keyof typeof f, v: string) => setF((x) => ({ ...x, [k]: v }));
-  const submit = async () => {
-    const body = { ...f, uploadMbps: f.uploadMbps === "" ? 0 : Number(f.uploadMbps), costAmount: f.costAmount === "" ? null : Number(f.costAmount) };
+    uploadMbps: machine?.uploadMbpsManual ? machine.uploadMbps ?? null : null, uploadHttpsUrl: machine?.uploadHttpsUrl ?? "",
+    costAmount: machine?.costAmount ?? null, costPeriod: machine?.costPeriod ?? "month", costRenewAt: machine?.costRenewAt ? dayjs(machine.costRenewAt) : null,
+  };
+  const submit = async (v: Values) => {
+    const body = { ...v, uploadMbps: v.uploadMbps ?? 0, costAmount: v.costAmount ?? null, costRenewAt: v.costRenewAt ? v.costRenewAt.format("YYYY-MM-DD") : "" };
     const r = machine
-      ? await run(() => api(`/api/machines/${machine.id}`, { method: "PATCH", body }), "Đã lưu máy.")
-      : await run(() => api<{ id: string }>("/api/machines", { body }), "Đã thêm máy — giờ cài worker lên VPS.");
+      ? await run(() => api(`/api/machines/${machine.id}`, { method: "PATCH", body }), "Đã lưu thông tin máy phát.")
+      : await run(() => api<{ id: string }>("/api/machines", { body }), "Đã thêm máy phát. Bước tiếp theo: cài worker lên VPS.");
     if (r) { onClose(); if (!machine && r && typeof r === "object" && "id" in r) onCreated?.(String(r.id)); }
   };
   return (
-    <Modal title={machine ? `Sửa máy "${machine.name}"` : "Thêm máy live (VPS)"} onClose={onClose} wide>
-      <div className="form-grid">
-        <Field label="Tên máy"><input value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="VPS 01" /></Field>
-        <Field label="IP" hint="Dùng để máy khác chép video VPS→VPS (cổng 8099). Chạy thử trên máy mình: 127.0.0.1"><input value={f.ip} onChange={(e) => set("ip", e.target.value)} /></Field>
-        <Field label="Vai trò">
-          <select value={f.role} onChange={(e) => set("role", e.target.value)}>
-            <option value="stream-247">Live 24/7</option><option value="live-pub">Live Pub</option><option value="shared">Dùng chung</option>
-          </select>
-        </Field>
-        <Field label="Nhà cung cấp"><input value={f.provider} onChange={(e) => set("provider", e.target.value)} /></Field>
-        <Field label="Khu vực"><input value={f.region} onChange={(e) => set("region", e.target.value)} /></Field>
-        <Field label="Băng thông đẩy (Mbps)" hint="Bỏ trống = worker tự đo (speedtest). Nhập số = đặt tay."><input type="number" min={0} value={f.uploadMbps} onChange={(e) => set("uploadMbps", e.target.value)} /></Field>
-        <Field label="Địa chỉ HTTPS nhận file (tuỳ chọn)" hint="VD https://live1.ten-mien.vn — khối cài sẽ tự dựng Caddy."><input value={f.uploadHttpsUrl} onChange={(e) => set("uploadHttpsUrl", e.target.value)} /></Field>
-        <Field label="Giá thuê"><input type="number" min={0} value={f.costAmount} onChange={(e) => set("costAmount", e.target.value)} /></Field>
-        <Field label="Chu kỳ"><select value={f.costPeriod} onChange={(e) => set("costPeriod", e.target.value)}><option value="month">tháng</option><option value="year">năm</option></select></Field>
-        <Field label="Hết hạn thuê (để nhắc gia hạn)"><input type="date" value={f.costRenewAt} onChange={(e) => set("costRenewAt", e.target.value)} /></Field>
-      </div>
-      <div className="actions">
-        <button className="btn-ghost" onClick={onClose}>Huỷ</button>
-        <button className="btn-primary" disabled={busy || !f.name || !f.ip} onClick={submit}>{machine ? "Lưu" : "Thêm máy"}</button>
-      </div>
+    <Modal open title={machine ? `Sửa máy phát “${machine.name}”` : "Thêm máy phát (VPS)"} onCancel={onClose} width={860} destroyOnHidden
+      okText={machine ? "Lưu" : "Thêm máy"} cancelText="Hủy" confirmLoading={busy} onOk={() => form.submit()}>
+      <Form form={form} layout="vertical" initialValues={initial} onFinish={submit} requiredMark="optional">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", columnGap: 16 }}>
+          <Form.Item name="name" label="Tên máy" rules={[{ required: true, whitespace: true, message: "Nhập tên máy" }]}><Input placeholder="VD: VPS 01" /></Form.Item>
+          <Form.Item name="ip" label="Địa chỉ IP" rules={[{ required: true, whitespace: true, message: "Nhập địa chỉ IP" }]}
+            tooltip="Dùng để các máy khác sao chép video trực tiếp (cổng 8099). Khi chạy thử trên máy tính của bạn, nhập 127.0.0.1.">
+            <Input placeholder="VD: 103.20.30.40" />
+          </Form.Item>
+          <Form.Item name="role" label="Vai trò">
+            <Select options={Object.entries(MACHINE_ROLE_LABEL).map(([value, label]) => ({ value, label }))} />
+          </Form.Item>
+          <Form.Item name="provider" label="Nhà cung cấp"><Input placeholder="VD: Vultr, Viettel IDC…" /></Form.Item>
+          <Form.Item name="region" label="Khu vực"><Input placeholder="VD: Singapore" /></Form.Item>
+          <Form.Item name="uploadMbps" label="Băng thông tải lên (Mbps)" tooltip="Để trống thì worker tự đo bằng speedtest. Nhập số để đặt thủ công.">
+            <InputNumber min={0} style={{ width: "100%" }} placeholder="Tự đo" />
+          </Form.Item>
+          <Form.Item name="uploadHttpsUrl" label="Địa chỉ HTTPS nhận file" tooltip="Không bắt buộc. VD: https://live1.ten-mien.vn — lệnh cài sẽ tự cấu hình Caddy."
+            rules={[{ pattern: /^$|^https:\/\//, message: "Địa chỉ phải bắt đầu bằng https://" }]}>
+            <Input placeholder="https://live1.ten-mien.vn" />
+          </Form.Item>
+          <Form.Item name="costAmount" label="Giá thuê (VNĐ)">
+            <InputNumber<number> min={0} style={{ width: "100%" }} formatter={(v) => `${v ?? ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")} parser={(v) => (v ?? "").replace(/\D/g, "") as unknown as number} />
+          </Form.Item>
+          <Form.Item name="costPeriod" label="Chu kỳ thanh toán">
+            <Select options={[{ value: "month", label: "Theo tháng" }, { value: "year", label: "Theo năm" }]} />
+          </Form.Item>
+          <Form.Item name="costRenewAt" label="Ngày hết hạn thuê" tooltip="Hệ thống sẽ nhắc gia hạn trước ngày này.">
+            <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+          </Form.Item>
+        </div>
+      </Form>
     </Modal>
   );
 }

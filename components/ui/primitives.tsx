@@ -1,40 +1,18 @@
-// Thành phần giao diện cơ bản dùng chung (không chứa nghiệp vụ).
+"use client";
+// Thành phần giao diện cơ bản dùng chung (không chứa nghiệp vụ), dựng trên antd.
 import type { ReactNode } from "react";
-
-export function Card({ title, action, children }: { title?: ReactNode; action?: ReactNode; children: ReactNode }) {
-  return (
-    <section className="card">
-      {(title || action) && <div className="card-head"><h3>{title}</h3>{action}</div>}
-      {children}
-    </section>
-  );
-}
+import { Tag } from "antd";
 
 export type Tone = "green" | "amber" | "red" | "gray" | "blue";
 
-export function Pill({ tone = "gray", children, title }: { tone?: Tone; children: ReactNode; title?: string }) {
-  return <span className={`pill pill-${tone}`} title={title}>{children}</span>;
+/** Tone nội bộ → màu trạng thái của antd. */
+export const TONE_COLOR: Record<Tone, string> = { green: "success", amber: "warning", red: "error", blue: "processing", gray: "default" };
+/** Tone → mã màu (dùng cho viền, chữ số liệu). */
+export const TONE_HEX: Record<Tone, string> = { green: "#16a34a", amber: "#d97706", red: "#dc2626", blue: "#2563eb", gray: "#94a3b8" };
+
+export function Pill({ tone = "gray", children, title, icon }: { tone?: Tone; children: ReactNode; title?: string; icon?: ReactNode }) {
+  return <Tag color={TONE_COLOR[tone]} title={title} icon={icon} bordered={false} style={{ marginInlineEnd: 0, display: "inline-flex", alignItems: "center", gap: 4 }}>{children}</Tag>;
 }
 
-export function Field({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
-  return (
-    <label className="field">
-      <span className="field-label">{label}</span>
-      {children}
-      {hint && <span className="field-hint">{hint}</span>}
-    </label>
-  );
-}
-
-export function Empty({ children }: { children: ReactNode }) {
-  return <p className="empty">{children}</p>;
-}
-
-export function Stat({ label, value, tone }: { label: string; value: ReactNode; tone?: Tone }) {
-  return (
-    <div className={`stat${tone ? ` stat-${tone}` : ""}`}>
-      <div className="stat-value">{value}</div>
-      <div className="stat-label">{label}</div>
-    </div>
-  );
-}
+/** Icon lucide cỡ chuẩn trong nút / thẻ. */
+export const ICON = { size: 14, strokeWidth: 2 } as const;

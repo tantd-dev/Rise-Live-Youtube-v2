@@ -1,6 +1,6 @@
 // Preset chất lượng video + công thức băng thông. THUẦN.
 // Chính sách giữ từ bản cũ: video thêm từ Drive LUÔN "Giữ nguyên gốc" (không nén lại trên VPS) —
-// nhân sự chuẩn hoá sẵn ở máy tính. Các preset nén vẫn giữ để worker hiểu dữ liệu cũ.
+// nhân sự chuẩn hóa sẵn ở máy tính. Các preset nén vẫn giữ để worker hiểu dữ liệu cũ.
 export interface QualityPreset {
   id: string;
   label: string;

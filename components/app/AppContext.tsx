@@ -1,11 +1,13 @@
 "use client";
-// Trạng thái dùng chung toàn app: dữ liệu tổng (tự làm mới), thông báo nhanh, chạy thao tác.
+// Trạng thái dùng chung toàn app: dữ liệu tổng (tự làm mới), thông báo nhanh, hộp xác nhận/nhập, chạy thao tác.
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { App, Input } from "antd";
 import { api } from "@/lib/client/api";
 import type { DashboardData } from "@/features/dashboard/types";
 import { can, type Permission } from "@/features/users/types";
 
-interface Toast { id: number; text: string; tone: "ok" | "err" }
+interface ConfirmOpts { title: string; content?: ReactNode; okText?: string; danger?: boolean }
+interface PromptOpts { title: string; label?: ReactNode; initial?: string; placeholder?: string; okText?: string; required?: boolean; multiline?: boolean }
 
 interface AppCtx {
   data: DashboardData | null;
@@ -13,6 +15,10 @@ interface AppCtx {
   busy: boolean;
   reload: () => Promise<void>;
   toast: (text: string, tone?: "ok" | "err") => void;
+  /** Hộp xác nhận — trả true nếu người dùng đồng ý. */
+  confirm: (o: ConfirmOpts) => Promise<boolean>;
+  /** Hộp nhập 1 dòng chữ — trả chuỗi đã nhập (đã cắt khoảng trắng) hoặc null nếu hủy. */
+  prompt: (o: PromptOpts) => Promise<string | null>;
   /** Chạy 1 thao tác: bật cờ bận, báo lỗi/thành công, làm mới dữ liệu. Trả kết quả hoặc null nếu lỗi. */
   run: <T>(fn: () => Promise<T>, okText?: string | ((r: T) => string)) => Promise<T | null>;
   can: (p: Permission) => boolean;
@@ -35,17 +41,44 @@ function nextDelay(d: DashboardData | null): number {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { message, modal } = App.useApp();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loadError, setLoadError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [toasts, setToasts] = useState<Toast[]>([]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const toast = useCallback((text: string, tone: "ok" | "err" = "ok") => {
-    const id = Date.now() + Math.random();
-    setToasts((t) => [...t, { id, text, tone }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), tone === "err" ? 8000 : 4000);
-  }, []);
+    if (tone === "err") void message.error({ content: text, duration: 8 });
+    else void message.success({ content: text, duration: 4 });
+  }, [message]);
+
+  const confirm = useCallback((o: ConfirmOpts) => new Promise<boolean>((resolve) => {
+    modal.confirm({
+      title: o.title, content: o.content, okText: o.okText ?? "Đồng ý", cancelText: "Hủy",
+      okButtonProps: o.danger ? { danger: true } : undefined,
+      onOk: () => resolve(true), onCancel: () => resolve(false),
+    });
+  }), [modal]);
+
+  const prompt = useCallback((o: PromptOpts) => new Promise<string | null>((resolve) => {
+    let value = o.initial ?? "";
+    const Field = o.multiline ? Input.TextArea : Input;
+    modal.confirm({
+      title: o.title, icon: null, okText: o.okText ?? "Lưu", cancelText: "Hủy",
+      content: (
+        <div style={{ marginTop: 8 }}>
+          {o.label && <div style={{ marginBottom: 6, opacity: 0.75 }}>{o.label}</div>}
+          <Field autoFocus defaultValue={value} placeholder={o.placeholder} onChange={(e: { target: { value: string } }) => { value = e.target.value; }} />
+        </div>
+      ),
+      onOk: () => {
+        const v = value.trim();
+        if (o.required && !v) { void message.warning("Vui lòng nhập nội dung."); return Promise.reject(); }
+        resolve(v);
+      },
+      onCancel: () => resolve(null),
+    });
+  }), [modal, message]);
 
   const reload = useCallback(async () => {
     if (timer.current) clearTimeout(timer.current);
@@ -81,11 +114,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [reload, toast]);
 
-  const value: AppCtx = { data, loadError, busy, reload, toast, run, can: (p) => can(data?.user, p) };
-  return (
-    <Ctx.Provider value={value}>
-      {children}
-      <div className="toasts">{toasts.map((t) => <div key={t.id} className={`toast toast-${t.tone}`} role="status">{t.text}</div>)}</div>
-    </Ctx.Provider>
-  );
+  const value: AppCtx = { data, loadError, busy, reload, toast, confirm, prompt, run, can: (p) => can(data?.user, p) };
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

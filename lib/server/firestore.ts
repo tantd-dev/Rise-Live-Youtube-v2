@@ -1,5 +1,5 @@
 // Kết nối Firestore dùng chung cho mọi route/service phía máy chủ.
-// Có FIRESTORE_EMULATOR_HOST → dùng emulator (không cần khoá Google). Không có → dùng
+// Có FIRESTORE_EMULATOR_HOST → dùng emulator (không cần khóa Google). Không có → dùng
 // Application Default Credentials (Cloud Run / máy đã `gcloud auth application-default login`).
 import { applicationDefault, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";

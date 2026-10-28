@@ -1,0 +1,7 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "emulator", "runtimeExecutable": "npm", "runtimeArgs": ["run", "emulator"], "port": 4000 },
+    { "name": "app", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 3000 }
+  ]
+}

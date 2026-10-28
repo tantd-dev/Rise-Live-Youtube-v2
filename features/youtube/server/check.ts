@@ -30,7 +30,7 @@ async function fetchVideos(ids: string[], key: string): Promise<Map<string, YtVi
 export async function checkYoutube(opts: { streamIds?: string[]; all?: boolean } = {}): Promise<{ checked: number; skipped?: string }> {
   const key = env.ytApiKey();
   if (!key) {
-    if (opts.streamIds) throw bad("Chưa cấu hình RISE_YT_API_KEY — không kiểm được YouTube.");
+    if (opts.streamIds) throw bad("Chưa cấu hình RISE_YT_API_KEY — không thể kiểm tra trạng thái trên YouTube.");
     return { checked: 0, skipped: "thiếu RISE_YT_API_KEY" };
   }
   const streams = (await readAll<Stream>(COL.streams, 5000)).filter((s) =>

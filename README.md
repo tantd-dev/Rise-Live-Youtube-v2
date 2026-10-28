@@ -40,18 +40,18 @@ npm run emulator   # 1. Firestore emulator (cổng theo FIRESTORE_EMULATOR_HOST,
 npm run dev        # 2. http://localhost:3000 → "Đăng nhập thử" (ALLOW_DEV_LOGIN=1)
 ```
 
-Trong giao diện: **Máy live → + Thêm máy** (IP `127.0.0.1` khi chạy thử) → hộp "Cài worker" hiện **mã máy** + vé riêng.
+Trong giao diện: **Máy phát → Thêm máy phát** (IP `127.0.0.1` khi chạy thử) → hộp "Cài worker" hiện **mã máy** + mã xác thực riêng.
 Chép 2 dòng `RISE_LIVE_MACHINE=…` / `RISE_LIVE_TOKEN=…` vào `.env.local`, rồi:
 
 ```bash
-npm run worker     # 3. worker (từ PowerShell sẽ tự chạy trong WSL Ubuntu) — máy chuyển 🟢 Online sau vài giây
+npm run worker     # 3. worker (từ PowerShell sẽ tự chạy trong WSL Ubuntu) — máy chuyển sang "Trực tuyến" sau vài giây
 ```
 
 Sau đó: **Kho video** thêm video (link Google Drive, hoặc tải thẳng nếu có `RISE_LIVE_UPLOAD_TOKEN`) → chờ "Sẵn sàng"
-→ **Luồng phát → + Tạo luồng**: chọn máy, video, dán **khoá luồng** + **link xem** (`youtube.com/watch?v=…`) từ
+→ **Luồng phát → Tạo luồng**: chọn máy, video, dán **khóa luồng** + **link xem** (`youtube.com/watch?v=…`) từ
 YouTube Studio. RTMP YouTube (`rtmp://a.rtmp.youtube.com/live2`) đã đặt sẵn.
 
-Lỗi worker hay gặp: `HTTP 404` = sai `RISE_LIVE_MACHINE` (máy chưa đăng ký) · `HTTP 401` = sai vé.
+Lỗi worker hay gặp: `HTTP 404` = sai `RISE_LIVE_MACHINE` (máy chưa đăng ký) · `HTTP 401` = sai mã xác thực.
 Chạy thử không cần YouTube: đặt `RISE_LIVE_RTMP_BASE=rtmp://127.0.0.1:1935/live2` cho **máy chủ** rồi mở một
 "máy nhận" cục bộ: `ffmpeg -listen 1 -i rtmp://127.0.0.1:1935/live2/<khoá> -f null -`.
 

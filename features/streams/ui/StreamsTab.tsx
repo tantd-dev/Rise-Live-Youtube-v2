@@ -1,7 +1,9 @@
 "use client";
 import { useMemo, useState } from "react";
+import { ProCard } from "@ant-design/pro-components";
+import { Button, Empty, Input, Segmented, Space } from "antd";
+import { Plus, RefreshCw, Search } from "lucide-react";
 import { useApp } from "@/components/app/AppContext";
-import { Card, Empty } from "@/components/ui/primitives";
 import { api } from "@/lib/client/api";
 import { StreamCard } from "./StreamCard";
 import { StreamForm } from "./StreamForm";
@@ -10,8 +12,8 @@ import type { StreamView } from "../types";
 
 const FILTERS = [
   { id: "all", label: "Tất cả", test: () => true },
-  { id: "live", label: "Đang đặt phát", test: (s: StreamView) => s.shouldBeLive },
-  { id: "issue", label: "Có vấn đề", test: (s: StreamView) => !!(s.ytIssue || s.needsHuman || s.restartHalted || s.health === "error" || s.slow || (s.black && !s.allowBlack)) },
+  { id: "live", label: "Đang bật", test: (s: StreamView) => !!s.shouldBeLive },
+  { id: "issue", label: "Có sự cố", test: (s: StreamView) => !!(s.ytIssue || s.needsHuman || s.restartHalted || s.health === "error" || s.slow || (s.black && !s.allowBlack)) },
   { id: "schedule", label: "Hẹn giờ", test: (s: StreamView) => s.control === "schedule" },
   { id: "stopped", label: "Đã dừng", test: (s: StreamView) => !s.shouldBeLive },
 ];
@@ -31,22 +33,25 @@ export function StreamsTab() {
 
   return (
     <>
-      <Card
-        title={`🔴 Luồng phát (${streams.length})`}
-        action={can("streams.operate") && (
-          <div className="row-actions">
-            {data?.config.ytApiKey && <button disabled={busy} onClick={() => run(() => api<{ checked: number }>("/api/youtube/check", { body: {} }), (r) => `Đã kiểm ${r.checked} luồng trên YouTube.`)}>Kiểm YouTube</button>}
-            <button className="btn-primary" onClick={() => setForm({})}>+ Tạo luồng</button>
-          </div>
+      <ProCard
+        title={`Danh sách luồng (${streams.length})`}
+        headerBordered
+        extra={can("streams.operate") && (
+          <Space wrap>
+            {data?.config.ytApiKey && <Button icon={<RefreshCw size={14} />} disabled={busy} onClick={() => run(() => api<{ checked: number }>("/api/youtube/check", { body: {} }), (r) => `Đã kiểm tra ${r.checked} luồng trên YouTube.`)}>Kiểm tra YouTube</Button>}
+            <Button type="primary" icon={<Plus size={14} />} onClick={() => setForm({})}>Tạo luồng</Button>
+          </Space>
         )}
       >
-        <div className="filters">
-          {FILTERS.map((f) => <button key={f.id} className={filter === f.id ? "chip on" : "chip"} onClick={() => setFilter(f.id)}>{f.label} ({streams.filter(f.test).length})</button>)}
-          <input className="search" placeholder="Tìm theo tên…" value={q} onChange={(e) => setQ(e.target.value)} />
-        </div>
-        {!shown.length ? <Empty>{streams.length ? "Không có luồng khớp bộ lọc." : "Chưa có luồng nào. Cần: 1 máy online + 1 video sẵn sàng trên máy đó + khoá luồng YouTube."}</Empty>
-          : <div className="stream-list">{shown.map((s) => <StreamCard key={s.id} s={s} onEdit={() => setForm({ stream: s })} onMove={() => setMoving(s)} />)}</div>}
-      </Card>
+        <Space wrap style={{ width: "100%", justifyContent: "space-between", marginBottom: 16 }}>
+          <Segmented value={filter} onChange={(v) => setFilter(String(v))}
+            options={FILTERS.map((f) => ({ value: f.id, label: `${f.label} (${streams.filter(f.test).length})` }))} />
+          <Input allowClear prefix={<Search size={14} />} placeholder="Tìm theo tên luồng…" value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 260 }} />
+        </Space>
+        {!shown.length
+          ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={streams.length ? "Không có luồng nào khớp bộ lọc." : "Chưa có luồng nào. Cần có: 1 máy phát trực tuyến, 1 video sẵn sàng trên máy đó và khóa luồng YouTube."} />
+          : <Space direction="vertical" size={12} style={{ width: "100%" }}>{shown.map((s) => <StreamCard key={s.id} s={s} onEdit={() => setForm({ stream: s })} onMove={() => setMoving(s)} />)}</Space>}
+      </ProCard>
       {form && <StreamForm stream={form.stream} onClose={() => setForm(null)} />}
       {moving && <MoveDialog stream={moving} onClose={() => setMoving(null)} />}
     </>

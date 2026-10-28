@@ -51,10 +51,10 @@ export async function startMove(streamId: string, targetId: string, user: Sessio
   ]);
   if (!stream) throw notFound("Luồng không tồn tại.");
   if (stream.moveState) throw bad("Luồng đang trong một lần chuyển khác.");
-  if (!shouldBeLive(stream)) throw bad("Chỉ chuyển được luồng ĐANG phát. Luồng đã dừng thì bấm Sửa để đổi máy.");
+  if (!shouldBeLive(stream)) throw bad("Chỉ chuyển được luồng ĐANG phát. Với luồng đã dừng, hãy bấm “Sửa” để đổi máy.");
   const cand = moveCandidates(stream, machines, streams, assets).find((c) => c.machineId === targetId);
   if (!cand) throw bad("Máy đích không hợp lệ.");
-  if (!cand.ok) throw bad(`Không chuyển được sang "${cand.name}": ${cand.reasons.join(", ")}.${cand.hasVideo ? "" : " Sao chép video sang máy đó trước (Kho video → Sao chép)."}`);
+  if (!cand.ok) throw bad(`Không chuyển được sang "${cand.name}": ${cand.reasons.join(", ")}.${cand.hasVideo ? "" : " Hãy sao chép video sang máy đó trước (Kho video → Sao chép sang máy khác)."}`);
   const targetIds = remapAssetIds(stream, targetId, assets)!;
   const exec = await db.collection(COL.moves).add({
     streamId, streamName: stream.name, moveType: "manual_safe_move", sourceMachineId: stream.machineId, targetMachineId: targetId,
@@ -72,7 +72,7 @@ export async function startMove(streamId: string, targetId: string, user: Sessio
 export async function runAutoFailover(): Promise<{ moved: number; skipped?: string }> {
   if (!env.autoFailover()) return { moved: 0, skipped: "RISE_LIVE_AUTOFAILOVER chưa bật" };
   const sw = await getSwitch();
-  if (sw.disabled) return { moved: 0, skipped: "công tắc tự cứu đang TẮT" };
+  if (sw.disabled) return { moved: 0, skipped: "dự phòng tự động đang TẮT" };
   const [machines, streams, assets] = await Promise.all([readAll<Machine>(COL.machines, 500), readAll<Stream>(COL.streams, 5000), readAll<Asset>(COL.assets, 8000)]);
   const nowMs = Date.now();
   const byId = new Map(machines.map((m) => [m.id, m]));
@@ -100,7 +100,7 @@ export async function runAutoFailover(): Promise<{ moved: number; skipped?: stri
       movePrevAssetIds: streamAssetIds(s), moveExecId: exec.id, moveDeadlineAt: deadline(), updatedAt: nowISO(),
     }, { merge: true });
     await logIncident({
-      streamId: s.id, streamName: s.name, machineId: s.machineId, streamOwner: s.createdBy ?? "", cause: "Máy chết — tự cứu",
+      streamId: s.id, streamName: s.name, machineId: s.machineId, streamOwner: s.createdBy ?? "", cause: "Máy phát gặp sự cố — tự động chuyển máy",
       reason: `chuyển sang ${cand.name}`, startedAt: byId.get(s.machineId)?.lastHeartbeatAt ?? nowISO(), resolution: "failover", resolvedBy: "system",
     });
     planned.push({ ...s, machineId: cand.machineId });

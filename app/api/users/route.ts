@@ -10,7 +10,7 @@ export const GET = route(async () => {
   return json({ ok: true, users: await listUsers() });
 });
 
-/** Thêm / sửa người dùng (vai trò, mật khẩu, khoá tài khoản). */
+/** Thêm / sửa người dùng (vai trò, mật khẩu, khóa tài khoản). */
 export const POST = route(async (req: Request) => {
   const user = await requireUser("users.manage");
   const b = await readBody<{ email?: string; fullName?: string; role?: Role; password?: string; active?: boolean }>(req);

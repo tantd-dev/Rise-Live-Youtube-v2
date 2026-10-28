@@ -2,16 +2,23 @@
 export type Role = "admin" | "operator" | "viewer";
 
 export const ROLE_LABEL: Record<Role, string> = {
-  admin: "Quản trị (máy, người dùng, cài đặt)",
-  operator: "Vận hành (luồng, video)",
-  viewer: "Chỉ xem",
+  admin: "Quản trị viên",
+  operator: "Vận hành viên",
+  viewer: "Người xem",
+};
+
+/** Mô tả quyền của từng vai trò (hiện cạnh ô chọn vai trò). */
+export const ROLE_HINT: Record<Role, string> = {
+  admin: "Toàn quyền: máy phát, người dùng, cài đặt hệ thống",
+  operator: "Quản lý luồng phát và kho video",
+  viewer: "Chỉ xem, không thao tác",
 };
 
 export type Permission =
   | "view"
-  | "streams.operate"   // tạo/sửa/bật/dừng/xoá luồng
-  | "assets.manage"     // thêm/sao chép/xoá video
-  | "machines.manage"   // thêm/sửa/xoá máy, xem lệnh cài worker
+  | "streams.operate"   // tạo/sửa/bật/dừng/xóa luồng
+  | "assets.manage"     // thêm/sao chép/xóa video
+  | "machines.manage"   // thêm/sửa/xóa máy, xem lệnh cài worker
   | "users.manage"      // gán vai trò
   | "settings.manage";  // công tắc tự cứu…
 
@@ -33,7 +40,7 @@ export function can(user: Pick<SessionUser, "role"> | null | undefined, perm: Pe
   return !!user && ROLE_PERMS[user.role]?.includes(perm);
 }
 
-/** Chuẩn hoá vai trò từ bản ghi users (kể cả bản ghi của bản cũ: role "admin" + quyền "riseLive"). */
+/** Chuẩn hóa vai trò từ bản ghi users (kể cả bản ghi của bản cũ: role "admin" + quyền "riseLive"). */
 export function normalizeRole(data: { role?: unknown; liveRole?: unknown; extraPermissions?: unknown }): Role {
   const r = String(data.liveRole ?? data.role ?? "");
   if (r === "admin" || r === "operator" || r === "viewer") return r;

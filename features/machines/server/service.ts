@@ -1,4 +1,4 @@
-// Máy live (VPS): thêm / sửa / ngắt / xoá. Ghi Firestore liveMachines.
+// Máy live (VPS): thêm / sửa / ngắt / xóa. Ghi Firestore liveMachines.
 import { db, COL, nowISO, readOne } from "@/lib/server/firestore";
 import { bad, notFound, str } from "@/lib/server/http";
 import { audit } from "@/lib/server/audit";
@@ -55,10 +55,10 @@ export async function updateMachine(id: string, b: MachineInput, by: string): Pr
   await audit(by, "machine.update", id, JSON.stringify(patch).slice(0, 200));
 }
 
-/** Xoá máy: chỉ khi không còn luồng gắn vào; dọn luôn bản ghi video của máy (file mất theo máy). */
+/** Xóa máy: chỉ khi không còn luồng gắn vào; dọn luôn bản ghi video của máy (file mất theo máy). */
 export async function deleteMachine(id: string, by: string): Promise<number> {
   const onMachine = await db.collection(COL.streams).where("machineId", "==", id).limit(1).get();
-  if (!onMachine.empty) throw bad("Máy còn luồng gắn vào — xoá hoặc chuyển luồng trước.");
+  if (!onMachine.empty) throw bad("Máy còn luồng gắn vào — xóa hoặc chuyển luồng trước.");
   const [aSnap, sSnap] = await Promise.all([
     db.collection(COL.assets).where("machineId", "==", id).limit(500).get(),
     db.collection(COL.streams).limit(5000).get(),

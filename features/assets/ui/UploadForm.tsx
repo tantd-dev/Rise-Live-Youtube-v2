@@ -1,8 +1,9 @@
 "use client";
-// Tải file video THẲNG từ máy tính lên worker của 1 máy (worker nghe cổng 8099; nên có HTTPS qua Caddy).
+// Tải file video TRỰC TIẾP từ máy tính lên worker của 1 máy (worker nghe cổng 8099; nên có HTTPS qua Caddy).
 import { useState } from "react";
+import { Alert, Button, Form, Progress, Select, Upload } from "antd";
+import { CloudUpload, FileVideoCamera } from "lucide-react";
 import { useApp } from "@/components/app/AppContext";
-import { Field } from "@/components/ui/primitives";
 import { api } from "@/lib/client/api";
 import { ORIGINAL_PRESET_ID } from "../presets";
 
@@ -11,18 +12,20 @@ function putWithProgress(url: string, file: File, onPct: (p: number) => void): P
     const x = new XMLHttpRequest();
     x.open("PUT", url);
     x.upload.onprogress = (e) => { if (e.lengthComputable) onPct(Math.round((e.loaded * 100) / e.total)); };
-    x.onload = () => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error(`Máy trả lỗi ${x.status}: ${x.responseText.slice(0, 200)}`)));
-    x.onerror = () => reject(new Error("Không kết nối được tới máy (kiểm cổng 8099 / HTTPS của máy)."));
+    x.onload = () => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error(`Máy phát trả lỗi ${x.status}: ${x.responseText.slice(0, 200)}`)));
+    x.onerror = () => reject(new Error("Không kết nối được tới máy phát (kiểm tra cổng 8099 hoặc địa chỉ HTTPS của máy)."));
     x.send(file);
   });
 }
 
 export function UploadForm() {
   const { data, toast, reload } = useApp();
-  const [machineId, setMachineId] = useState("");
+  const [machineId, setMachineId] = useState<string>();
   const [file, setFile] = useState<File | null>(null);
   const [pct, setPct] = useState<number | null>(null);
-  if (!data?.config.uploadEnabled) return <p className="muted">Tải thẳng đang tắt — đặt RISE_LIVE_UPLOAD_TOKEN trên máy chủ và trong khối cài worker.</p>;
+  if (!data?.config.uploadEnabled) {
+    return <Alert type="info" showIcon message="Chức năng tải lên trực tiếp đang tắt" description={<>Đặt <code>RISE_LIVE_UPLOAD_TOKEN</code> trên máy chủ điều khiển và trong lệnh cài worker để bật.</>} />;
+  }
 
   const upload = async () => {
     if (!file || !machineId) return;
@@ -31,7 +34,7 @@ export function UploadForm() {
       const qs = new URLSearchParams({ token: t.token, name: file.name.replace(/\.[^.]+$/, ""), email: t.email, preset: ORIGINAL_PRESET_ID });
       setPct(0);
       await putWithProgress(`${t.url}/upload?${qs}`, file, setPct);
-      toast("Đã tải lên — video hiện trong kho sau vài giây.");
+      toast("Đã tải lên. Video sẽ xuất hiện trong kho sau vài giây.");
       setFile(null);
       void reload();
     } catch (e) {
@@ -41,17 +44,29 @@ export function UploadForm() {
     }
   };
   return (
-    <div className="form-grid">
-      <Field label="File video (.mp4 đã chuẩn hoá sẵn)"><input type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></Field>
-      <Field label="Lên máy">
-        <select value={machineId} onChange={(e) => setMachineId(e.target.value)}>
-          <option value="">— chọn máy —</option>
-          {data.machines.map((m) => <option key={m.id} value={m.id}>{m.name}{m.uploadHttpsUrl ? " (HTTPS)" : ""}</option>)}
-        </select>
-      </Field>
-      <div className="field"><span className="field-label">&nbsp;</span>
-        <button className="btn-primary" disabled={!file || !machineId || pct !== null} onClick={upload}>{pct !== null ? `Đang tải ${pct}%` : "Tải lên"}</button>
+    <Form layout="vertical" requiredMark={false}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", columnGap: 16 }}>
+        <Form.Item label="File video" tooltip="Nên dùng file .mp4 đã chuẩn hóa sẵn (H.264/AAC) để phát không cần chuyển mã.">
+          <Upload
+            accept="video/*" maxCount={1} disabled={pct !== null}
+            beforeUpload={(f) => { setFile(f); return false; }}
+            onRemove={() => setFile(null)}
+            fileList={file ? [{ uid: "1", name: file.name, status: "done" }] : []}
+          >
+            <Button icon={<FileVideoCamera size={14} />}>Chọn file…</Button>
+          </Upload>
+        </Form.Item>
+        <Form.Item label="Tải lên máy phát">
+          <Select value={machineId} onChange={setMachineId} placeholder="Chọn máy phát"
+            options={data.machines.map((m) => ({ value: m.id, label: `${m.name}${m.uploadHttpsUrl ? " (HTTPS)" : ""}` }))} />
+        </Form.Item>
+        <Form.Item label=" ">
+          <Button type="primary" block disabled={!file || !machineId} loading={pct !== null} onClick={upload} icon={<CloudUpload size={14} />}>
+            {pct !== null ? `Đang tải lên ${pct}%` : "Tải lên"}
+          </Button>
+          {pct !== null && <Progress percent={pct} size="small" />}
+        </Form.Item>
       </div>
-    </div>
+    </Form>
   );
 }

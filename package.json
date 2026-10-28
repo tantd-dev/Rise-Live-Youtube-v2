@@ -12,7 +12,13 @@
     "create-user": "tsx scripts/create-user.ts"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.6.1",
+    "@ant-design/nextjs-registry": "^1.3.0",
+    "@ant-design/pro-components": "^2.8.10",
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "antd": "^5.29.3",
     "firebase-admin": "^13.0.0",
+    "lucide-react": "^1.63.0",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

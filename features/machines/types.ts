@@ -3,7 +3,7 @@ export type MachineRole = "stream-247" | "live-pub" | "shared";
 export const MACHINE_ROLE_LABEL: Record<MachineRole, string> = {
   "stream-247": "Live 24/7",
   "live-pub": "Live Pub",
-  shared: "Dùng chung",
+  shared: "Dùng chung (cả hai)",
 };
 
 export interface Machine {

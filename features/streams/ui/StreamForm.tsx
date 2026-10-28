@@ -1,9 +1,9 @@
 "use client";
 // Form tạo / sửa luồng.
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { Checkbox, DatePicker, Divider, Empty, Form, Input, InputNumber, Modal, Select, Typography } from "antd";
+import dayjs, { type Dayjs } from "dayjs";
 import { useApp } from "@/components/app/AppContext";
-import { Field } from "@/components/ui/primitives";
-import { Modal } from "@/components/ui/Modal";
 import { api } from "@/lib/client/api";
 import { fmtDuration } from "@/lib/client/format";
 import { checkStreamKey } from "../stream-key";
@@ -12,118 +12,140 @@ import { WatchUrlInput } from "@/features/youtube/ui/WatchUrlInput";
 import type { StreamView } from "../types";
 
 interface FormState {
-  name: string; mode: string; machineId: string; assetIds: string[]; playMode: string; streamKey: string; watchUrl: string;
-  control: string; scheduleStart: string; scheduleDurationMin: string; scheduleRepeat: string;
+  name: string; mode: string; machineId?: string; assetIds: string[]; playMode: string; streamKey: string; watchUrl: string;
+  control: string; scheduleStart: Dayjs | null; scheduleDurationMin: number | null; scheduleRepeat: string;
   importance: string; failoverMode: string; allowBlack: boolean;
 }
 
 function initial(s?: StreamView): FormState {
   return {
-    name: s?.name ?? "", mode: s?.mode ?? "stream-247", machineId: s?.machineId ?? "", assetIds: s?.assetIds?.length ? s.assetIds : s?.assetId ? [s.assetId] : [],
+    name: s?.name ?? "", mode: s?.mode ?? "stream-247", machineId: s?.machineId || undefined, assetIds: s?.assetIds?.length ? s.assetIds : s?.assetId ? [s.assetId] : [],
     playMode: s?.playMode ?? "sequence", streamKey: "", watchUrl: s?.watchUrl ?? "",
-    control: s?.control ?? "manual", scheduleStart: s?.schedule?.start ?? "", scheduleDurationMin: s?.schedule?.durationMin ? String(s.schedule.durationMin) : "",
+    control: s?.control ?? "manual", scheduleStart: s?.schedule?.start ? dayjs(s.schedule.start) : null, scheduleDurationMin: s?.schedule?.durationMin || null,
     scheduleRepeat: s?.schedule?.repeat ?? "none", importance: s?.importance ?? "normal", failoverMode: s?.failoverMode ?? "disabled", allowBlack: !!s?.allowBlack,
   };
 }
 
+const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", columnGap: 16 } as const;
+const fromCheck = (r: { ok: true } | { ok: false; error: string }) => (r.ok ? Promise.resolve() : Promise.reject(new Error(r.error)));
+
 export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: () => void }) {
   const { data, run, busy } = useApp();
-  const [f, setF] = useState<FormState>(() => initial(stream));
-  const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((x) => ({ ...x, [k]: v }));
+  const [form] = Form.useForm<FormState>();
+  const machineId = Form.useWatch("machineId", form);
+  const mode = Form.useWatch("mode", form) ?? initial(stream).mode;
+  const control = Form.useWatch("control", form) ?? initial(stream).control;
+  const importance = Form.useWatch("importance", form) ?? initial(stream).importance;
+  const assetIds: string[] = Form.useWatch("assetIds", form) ?? [];
   const machines = data?.machines ?? [];
-  const ready = useMemo(() => (data?.assets ?? []).filter((a) => a.status === "ready" && a.machineId === f.machineId), [data, f.machineId]);
-  const keyErr = f.streamKey ? (() => { const r = checkStreamKey(f.streamKey); return r.ok ? "" : r.error; })() : "";
-  const watchErr = f.watchUrl ? (() => { const r = checkWatchUrl(f.watchUrl); return r.ok ? "" : r.error; })() : "";
+  const ready = useMemo(() => (data?.assets ?? []).filter((a) => a.status === "ready" && a.machineId === machineId), [data, machineId]);
 
-  const submit = async () => {
-    const body = { ...f, streamKey: f.streamKey.trim() || undefined };
+  const submit = async (v: FormState) => {
+    const body = {
+      ...v,
+      machineId: v.machineId ?? "",
+      streamKey: v.streamKey.trim() || undefined,
+      scheduleStart: v.scheduleStart ? v.scheduleStart.format("YYYY-MM-DDTHH:mm") : "",
+      scheduleDurationMin: v.scheduleDurationMin ? String(v.scheduleDurationMin) : "",
+      failoverMode: v.importance !== "normal" ? "automatic" : v.failoverMode,
+    };
     const r = await run(
       () => stream ? api(`/api/streams/${stream.id}`, { method: "PUT", body }) : api<{ warnings?: string[] }>("/api/streams", { body }),
-      (res) => [stream ? "Đã lưu luồng." : f.control === "manual" ? "Đã tạo luồng — máy sẽ lên sóng trong vài giây." : "Đã tạo luồng hẹn giờ.", ...((res as { warnings?: string[] })?.warnings ?? [])].join(" "),
+      (res) => [stream ? "Đã lưu luồng phát." : v.control === "manual" ? "Đã tạo luồng. Máy phát sẽ lên sóng sau vài giây." : "Đã tạo luồng hẹn giờ.", ...((res as { warnings?: string[] })?.warnings ?? [])].join(" "),
     );
     if (r) onClose();
   };
 
   return (
-    <Modal title={stream ? `Sửa luồng "${stream.name}"` : "Tạo luồng phát"} onClose={onClose} wide>
-      <div className="form-grid">
-        <Field label="Tên luồng"><input value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="VD: Nhạc thiền 24/7 — kênh A" /></Field>
-        <Field label="Kiểu phát">
-          <select value={f.mode} onChange={(e) => set("mode", e.target.value)}>
-            <option value="stream-247">Live 24/7 (lặp liên tục, rớt thì tự nối lại)</option>
-            <option value="live-pub">Live Pub (phát 1 buổi, rớt quá 90 giây là kết thúc)</option>
-          </select>
-        </Field>
-        <Field label="Máy phát">
-          <select value={f.machineId} onChange={(e) => setF((x) => ({ ...x, machineId: e.target.value, assetIds: [] }))}>
-            <option value="">— chọn máy —</option>
-            {machines.map((m) => (
-              <option key={m.id} value={m.id} disabled={m.maintenance}>
-                {m.name} · {m.online ? "online" : "offline"}{m.maintenance ? " · bảo trì" : ""} · {m.liveCount} luồng
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Khoá luồng YouTube" hint={keyErr ? <span className="err">{keyErr}</span> : stream ? "Để trống = giữ khoá cũ." : "YouTube Studio › Phát trực tiếp › Khoá luồng. RTMP đã đặt sẵn."}>
-          <input value={f.streamKey} onChange={(e) => set("streamKey", e.target.value)} placeholder={stream ? stream.streamKeyMasked : "xxxx-xxxx-xxxx-xxxx-xxxx"} autoComplete="off" />
-        </Field>
-        <Field label="Link xem buổi live trên YouTube" hint={watchErr ? <span className="err">{watchErr}</span> : "Chỉ cần dán MÃ buổi live — tự thành https://www.youtube.com/watch?v=<mã>."}>
-          <WatchUrlInput value={f.watchUrl} onChange={(v) => set("watchUrl", v)} />
-        </Field>
-        <Field label="Điều khiển">
-          <select value={f.control} onChange={(e) => set("control", e.target.value)}>
-            <option value="manual">Bật tay (lên sóng ngay sau khi tạo)</option>
-            <option value="schedule">Hẹn giờ</option>
-          </select>
-        </Field>
-        {f.control === "schedule" && (
-          <>
-            <Field label="Bắt đầu lúc (giờ VN)"><input type="datetime-local" value={f.scheduleStart} onChange={(e) => set("scheduleStart", e.target.value)} /></Field>
-            {f.mode === "live-pub" ? (
-              <>
-                <Field label="Thời lượng (phút)"><input type="number" min={1} value={f.scheduleDurationMin} onChange={(e) => set("scheduleDurationMin", e.target.value)} /></Field>
-                <Field label="Lặp lại">
-                  <select value={f.scheduleRepeat} onChange={(e) => set("scheduleRepeat", e.target.value)}>
-                    <option value="none">1 lần</option><option value="daily">Hằng ngày cùng giờ</option>
-                  </select>
-                </Field>
-              </>
-            ) : <p className="muted">Live 24/7 hẹn giờ: phát liên tục từ giờ bắt đầu.</p>}
-          </>
-        )}
-        <Field label="Mức ưu tiên">
-          <select value={f.importance} onChange={(e) => set("importance", e.target.value)}>
-            <option value="normal">Thường</option><option value="priority">⭐ Ưu tiên (tự cứu khi máy chết)</option><option value="critical">🔥 Trọng yếu</option>
-          </select>
-        </Field>
-        <Field label="Dự phòng khi máy chết">
-          <select value={f.importance !== "normal" ? "automatic" : f.failoverMode} disabled={f.importance !== "normal"} onChange={(e) => set("failoverMode", e.target.value)}>
-            <option value="disabled">Không</option><option value="manual">Chuyển tay</option><option value="automatic">Tự động chuyển máy</option>
-          </select>
-        </Field>
-      </div>
-
-      <Field label={`Video trên máy đã chọn (${f.assetIds.length} đã chọn)`} hint={f.machineId && !ready.length ? "Máy này chưa có video sẵn sàng — thêm hoặc sao chép video sang máy này ở tab Kho video." : "Chọn nhiều video = danh sách phát nối tiếp, lặp vòng."}>
-        <div className="checklist">
-          {!f.machineId ? <span className="muted">Chọn máy trước.</span> : ready.map((a) => (
-            <label key={a.id} className="check">
-              <input type="checkbox" checked={f.assetIds.includes(a.id)} onChange={(e) => set("assetIds", e.target.checked ? [...f.assetIds, a.id] : f.assetIds.filter((x) => x !== a.id))} />
-              {a.name} <span className="muted">· {a.width ? `${a.width}×${a.height}` : ""} {a.durationSec ? `· ${fmtDuration(a.durationSec)}` : ""}</span>
-            </label>
-          ))}
+    <Modal open title={stream ? `Sửa luồng “${stream.name}”` : "Tạo luồng phát"} onCancel={onClose} width={900} destroyOnHidden
+      okText={stream ? "Lưu" : control === "manual" ? "Tạo và lên sóng" : "Tạo luồng hẹn giờ"} cancelText="Hủy" confirmLoading={busy} onOk={() => form.submit()}>
+      <Form form={form} layout="vertical" initialValues={initial(stream)} onFinish={submit} requiredMark="optional"
+        onValuesChange={(ch) => {
+          if ("machineId" in ch) form.setFieldValue("assetIds", []);
+          if (ch.importance && ch.importance !== "normal") form.setFieldValue("failoverMode", "automatic");
+        }}>
+        <div style={grid}>
+          <Form.Item name="name" label="Tên luồng" rules={[{ required: true, whitespace: true, message: "Nhập tên luồng" }]}>
+            <Input placeholder="VD: Nhạc thiền 24/7 — kênh A" />
+          </Form.Item>
+          <Form.Item name="mode" label="Kiểu phát">
+            <Select options={[
+              { value: "stream-247", label: "Live 24/7 — phát lặp liên tục, mất kết nối thì tự nối lại" },
+              { value: "live-pub", label: "Live Pub — phát một buổi, mất kết nối quá 90 giây thì kết thúc" },
+            ]} />
+          </Form.Item>
+          <Form.Item name="machineId" label="Máy phát" rules={[{ required: true, message: "Chọn máy phát" }]}>
+            <Select placeholder="Chọn máy phát" options={machines.map((m) => ({
+              value: m.id, disabled: m.maintenance,
+              label: `${m.name} · ${m.online ? "trực tuyến" : "ngoại tuyến"}${m.maintenance ? " · đang bảo trì" : ""} · ${m.liveCount} luồng`,
+            }))} />
+          </Form.Item>
+          <Form.Item name="streamKey" label="Khóa luồng YouTube"
+            rules={[...(stream ? [] : [{ required: true, whitespace: true, message: "Dán khóa luồng từ YouTube Studio" }]), { validator: (_, v) => (v ? fromCheck(checkStreamKey(v)) : Promise.resolve()) }]}
+            extra={stream ? "Để trống nếu muốn giữ khóa luồng hiện tại." : "Lấy tại YouTube Studio › Phát trực tiếp › Khóa luồng. Địa chỉ RTMP đã được cấu hình sẵn."}>
+            <Input.Password placeholder={stream ? stream.streamKeyMasked : "xxxx-xxxx-xxxx-xxxx-xxxx"} autoComplete="off" visibilityToggle />
+          </Form.Item>
+          <Form.Item name="watchUrl" label="Link xem buổi live trên YouTube"
+            rules={[{ required: true, message: "Dán mã hoặc link buổi live" }, { validator: (_, v) => (v ? fromCheck(checkWatchUrl(v)) : Promise.resolve()) }]}
+            extra="Chỉ cần dán MÃ buổi live — hệ thống tự đổi thành https://www.youtube.com/watch?v=<mã>.">
+            <WatchUrlInput />
+          </Form.Item>
+          <Form.Item name="control" label="Cách bật luồng">
+            <Select options={[{ value: "manual", label: "Thủ công (lên sóng ngay sau khi tạo)" }, { value: "schedule", label: "Hẹn giờ" }]} />
+          </Form.Item>
+          {control === "schedule" && (
+            <>
+              <Form.Item name="scheduleStart" label="Bắt đầu lúc (giờ Việt Nam)" rules={[{ required: true, message: "Chọn thời điểm bắt đầu" }]}>
+                <DatePicker showTime={{ format: "HH:mm" }} format="DD/MM/YYYY HH:mm" style={{ width: "100%" }} />
+              </Form.Item>
+              {mode === "live-pub" ? (
+                <>
+                  <Form.Item name="scheduleDurationMin" label="Thời lượng (phút)" rules={[{ required: true, message: "Nhập thời lượng" }]}>
+                    <InputNumber min={1} style={{ width: "100%" }} />
+                  </Form.Item>
+                  <Form.Item name="scheduleRepeat" label="Lặp lại">
+                    <Select options={[{ value: "none", label: "Chỉ một lần" }, { value: "daily", label: "Hằng ngày vào cùng giờ" }]} />
+                  </Form.Item>
+                </>
+              ) : (
+                <Form.Item label=" "><Typography.Text type="secondary">Live 24/7 hẹn giờ sẽ phát liên tục kể từ thời điểm bắt đầu.</Typography.Text></Form.Item>
+              )}
+            </>
+          )}
+          <Form.Item name="importance" label="Mức ưu tiên">
+            <Select options={[
+              { value: "normal", label: "Bình thường" },
+              { value: "priority", label: "Ưu tiên (tự động dự phòng khi máy gặp sự cố)" },
+              { value: "critical", label: "Quan trọng" },
+            ]} />
+          </Form.Item>
+          <Form.Item name="failoverMode" label="Dự phòng khi máy phát gặp sự cố"
+            extra={importance !== "normal" ? "Luồng ưu tiên/quan trọng luôn được tự động chuyển máy." : undefined}>
+            <Select disabled={importance !== "normal"}
+              options={[{ value: "disabled", label: "Không dự phòng" }, { value: "manual", label: "Chuyển máy thủ công" }, { value: "automatic", label: "Tự động chuyển máy" }]} />
+          </Form.Item>
         </div>
-      </Field>
-      {f.assetIds.length > 1 && (
-        <Field label="Thứ tự phát">
-          <select value={f.playMode} onChange={(e) => set("playMode", e.target.value)}><option value="sequence">Lần lượt</option><option value="random">Ngẫu nhiên</option></select>
-        </Field>
-      )}
-      <label className="check"><input type="checkbox" checked={f.allowBlack} onChange={(e) => set("allowBlack", e.target.checked)} /> Nội dung tối/đen chủ ý (không cảnh báo màn đen)</label>
 
-      <div className="actions">
-        <button className="btn-ghost" onClick={onClose}>Huỷ</button>
-        <button className="btn-primary" disabled={busy || !!keyErr || !!watchErr} onClick={submit}>{stream ? "Lưu" : f.control === "manual" ? "Tạo & lên sóng" : "Tạo luồng hẹn giờ"}</button>
-      </div>
+        <Divider style={{ margin: "4px 0 16px" }} />
+        <Form.Item name="assetIds" label={`Video phát (đã chọn ${assetIds.length})`} rules={[{ required: true, type: "array", min: 1, message: "Chọn ít nhất 1 video" }]}
+          extra={machineId && !ready.length ? "Máy này chưa có video nào sẵn sàng — hãy thêm hoặc sao chép video sang máy này ở tab Kho video." : "Chọn nhiều video để tạo danh sách phát nối tiếp, lặp vòng."}>
+          {!machineId ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chọn máy phát trước." /> : (
+            <Checkbox.Group style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 240, overflow: "auto", padding: 8, border: "1px solid rgba(127,127,127,.25)", borderRadius: 8 }}
+              options={ready.map((a) => ({
+                value: a.id,
+                label: <span>{a.name} <Typography.Text type="secondary">{[a.width ? `${a.width}×${a.height}` : "", a.durationSec ? fmtDuration(a.durationSec) : ""].filter(Boolean).join(" · ")}</Typography.Text></span>,
+              }))} />
+          )}
+        </Form.Item>
+        {assetIds.length > 1 && (
+          <Form.Item name="playMode" label="Thứ tự phát" style={{ maxWidth: 300 }}>
+            <Select options={[{ value: "sequence", label: "Lần lượt" }, { value: "random", label: "Ngẫu nhiên" }]} />
+          </Form.Item>
+        )}
+        <Form.Item name="allowBlack" valuePropName="checked" style={{ marginBottom: 0 }}>
+          <Checkbox>Video có cảnh tối/đen là chủ ý (không cảnh báo màn hình đen)</Checkbox>
+        </Form.Item>
+      </Form>
     </Modal>
   );
 }

@@ -27,10 +27,10 @@ export interface Asset {
 
 export const ASSET_STATUS_LABEL: Record<string, string> = {
   pending: "Chờ xử lý",
-  waiting: "Đang xếp hàng",
+  waiting: "Đang chờ tải",
   downloading: "Đang tải",
-  queued: "Chờ nén",
-  normalizing: "Đang chuẩn hoá",
+  queued: "Chờ chuẩn hóa",
+  normalizing: "Đang chuẩn hóa",
   uploading: "Đang nhận file",
   ready: "Sẵn sàng",
   error: "Lỗi",

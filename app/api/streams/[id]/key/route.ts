@@ -1,4 +1,4 @@
-// Hiện khoá luồng đầy đủ (ẩn mặc định như mật khẩu; ghi nhật ký người xem).
+// Hiện khóa luồng đầy đủ (ẩn mặc định như mật khẩu; ghi nhật ký người xem).
 import { json, route } from "@/lib/server/http";
 import { requireUser } from "@/features/users/server/session";
 import { revealKey } from "@/features/streams/server/service";

@@ -50,10 +50,10 @@ export function moveCandidates(stream: Stream, machines: Machine[], streams: Str
   const per = streamMbps(findPreset(stream.presetId));
   return machines.filter((m) => m.id !== stream.machineId).map((m) => {
     const reasons: string[] = [];
-    if (!isOnline(m, nowMs)) reasons.push("máy offline");
+    if (!isOnline(m, nowMs)) reasons.push("máy đang ngoại tuyến");
     if (m.maintenance) reasons.push("đang bảo trì");
     const hasVideo = !!remapAssetIds(stream, m.id, assets);
-    if (!hasVideo) reasons.push("chưa có bản video sẵn sàng");
+    if (!hasVideo) reasons.push("chưa có video sẵn sàng");
     const up = Number(m.uploadMbps) || 0;
     let freeMbps: number | null = null;
     if (up > 0) {

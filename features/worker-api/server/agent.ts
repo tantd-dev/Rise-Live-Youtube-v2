@@ -2,7 +2,7 @@
 //   1. ghi nhịp tim + cấu hình máy   2. ghi trạng thái video/luồng worker báo
 //   3. ghi sự cố tự phục hồi + đăng ký video tải thẳng   4. đẩy tiến trình chuyển máy
 //   5. trả DANH SÁCH MONG MUỐN (video cần có, luồng cần phát) cho đúng máy đó.
-// Dùng update() (không set-merge) cho video/luồng: bản ghi vừa bị xoá thì báo trễ không tạo lại "bản ma".
+// Dùng update() (không set-merge) cho video/luồng: bản ghi vừa bị xóa thì báo trễ không tạo lại "bản ma".
 import { db, COL, nowISO } from "@/lib/server/firestore";
 import { HttpError } from "@/lib/server/http";
 import { env } from "@/lib/server/env";
@@ -186,7 +186,7 @@ async function applyStreamReports(body: AgentRequest, streams: Map<string, Strea
 }
 
 // 3) Video tải thẳng lên máy → tạo bản ghi "sẵn sàng" và đưa NGAY vào danh sách trả về
-//    (thiếu là worker tưởng video đã bị xoá và dọn mất file vừa nhận).
+//    (thiếu là worker tưởng video đã bị xóa và dọn mất file vừa nhận).
 async function registerUploads(body: AgentRequest, machineId: string, assets: Map<string, Asset>): Promise<Set<string>> {
   const ids = new Set<string>();
   for (const u of body.uploaded ?? []) {

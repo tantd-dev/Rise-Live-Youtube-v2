@@ -1,4 +1,4 @@
-// Kho video: thêm từ Google Drive, sao chép sang máy khác, đổi tên, xoá. Worker tự tải/chuẩn hoá.
+// Kho video: thêm từ Google Drive, sao chép sang máy khác, đổi tên, xóa. Worker tự tải/chuẩn hóa.
 import { db, COL, nowISO, readOne } from "@/lib/server/firestore";
 import { bad, notFound, str } from "@/lib/server/http";
 import { env } from "@/lib/server/env";
@@ -78,13 +78,13 @@ export async function renameAsset(id: string, name: string, by: string) {
   await audit(by, "asset.rename", id, n);
 }
 
-/** Xoá video (worker tự dọn file trên VPS ở nhịp sau). Chặn nếu còn luồng dùng. */
+/** Xóa video (worker tự dọn file trên VPS ở nhịp sau). Chặn nếu còn luồng dùng. */
 export async function deleteAsset(id: string, by: string) {
   const [single, inList] = await Promise.all([
     db.collection(COL.streams).where("assetId", "==", id).limit(1).get(),
     db.collection(COL.streams).where("assetIds", "array-contains", id).limit(1).get(),
   ]);
-  if (!single.empty || !inList.empty) throw bad("Video đang được một luồng dùng — xoá hoặc sửa luồng trước.");
+  if (!single.empty || !inList.empty) throw bad("Video đang được một luồng dùng — xóa hoặc sửa luồng trước.");
   await db.collection(COL.assets).doc(id).delete();
   await audit(by, "asset.delete", id);
 }
@@ -92,7 +92,7 @@ export async function deleteAsset(id: string, by: string) {
 /** Thông tin để trình duyệt TẢI THẲNG file lên worker của 1 máy. */
 export async function uploadTarget(machineId: string, by: string) {
   const token = env.uploadToken();
-  if (!token) throw bad("Chưa bật tải thẳng (thiếu RISE_LIVE_UPLOAD_TOKEN trên máy chủ).");
+  if (!token) throw bad("Chức năng tải lên trực tiếp chưa bật (thiếu RISE_LIVE_UPLOAD_TOKEN trên máy chủ).");
   const m = await machineOrFail(machineId);
   const block = intakeBlock(m, env.minFreeGb());
   if (block) throw bad(block);

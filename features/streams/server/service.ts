@@ -1,4 +1,4 @@
-// Luồng phát: tạo / sửa / bật / dừng / xoá + các thao tác phụ. Worker đọc desiredState để khớp theo.
+// Luồng phát: tạo / sửa / bật / dừng / xóa + các thao tác phụ. Worker đọc desiredState để khớp theo.
 import { db, COL, nowISO, readOne } from "@/lib/server/firestore";
 import { bad, notFound, str } from "@/lib/server/http";
 import { env } from "@/lib/server/env";
@@ -27,7 +27,7 @@ async function getStream(id: string): Promise<Stream> {
   return s;
 }
 
-/** Kiểm + chuẩn hoá dữ liệu form tạo/sửa luồng. */
+/** Kiểm + chuẩn hóa dữ liệu form tạo/sửa luồng. */
 async function validate(b: StreamInput, excludeId: string | null) {
   const name = str(b.name, 120), machineId = str(b.machineId, 80), streamKey = str(b.streamKey, 200);
   const mode: StreamMode = b.mode === "live-pub" ? "live-pub" : "stream-247";
@@ -55,24 +55,24 @@ async function validate(b: StreamInput, excludeId: string | null) {
   let schedule: Schedule | null = null;
   if (control === "schedule") {
     const start = str(b.scheduleStart, 40);
-    if (!start) throw bad("Lịch phát: thiếu thời điểm bắt đầu.");
+    if (!start) throw bad("Lịch phát chưa có thời điểm bắt đầu.");
     if (mode === "live-pub") {
       const durationMin = Math.round(Number(b.scheduleDurationMin) || 0);
-      if (durationMin <= 0) throw bad("Live Pub hẹn giờ: cần thời lượng (phút).");
+      if (durationMin <= 0) throw bad("Live Pub hẹn giờ cần nhập thời lượng (phút).");
       schedule = { start, durationMin, repeat: b.scheduleRepeat === "daily" ? "daily" : "none" };
     } else {
       schedule = { start, durationMin: 0, repeat: "none" };
     }
   }
 
-  // Trùng khoá luồng với luồng khác đang phát / lịch chồng giờ → YouTube không nhận 2 nguồn 1 khoá.
+  // Trùng khóa luồng với luồng khác đang phát / lịch chồng giờ → YouTube không nhận 2 nguồn 1 khóa.
   const sameKey = await db.collection(COL.streams).where("streamKey", "==", streamKey).get();
   for (const d of sameKey.docs) {
     if (d.id === excludeId) continue;
     const o = d.data() as Stream;
-    if (shouldBeLive(o)) throw bad(`Khoá luồng này ĐANG được luồng "${o.name}" dùng. Đổi khoá hoặc dừng luồng kia trước.`);
+    if (shouldBeLive(o)) throw bad(`Khóa luồng này ĐANG được luồng "${o.name}" dùng. Đổi khóa hoặc dừng luồng kia trước.`);
     if (control === "schedule" && o.control === "schedule" && schedulesOverlap(schedule, o.schedule))
-      throw bad(`Khoá luồng này trùng luồng "${o.name}" và hai lịch chồng giờ.`);
+      throw bad(`Khóa luồng này trùng luồng "${o.name}" và hai lịch chồng giờ.`);
   }
 
   const importance: Importance = ["priority", "critical"].includes(String(b.importance)) ? (b.importance as Importance) : "normal";
@@ -99,10 +99,10 @@ async function liveCountOn(machineId: string, excludeId?: string): Promise<numbe
 /** Kiểm trước khi lên sóng NGAY: máy online, không bảo trì, còn băng thông. */
 async function preflightGoLive(machine: Machine, presetId: string, streamId?: string): Promise<string[]> {
   if (machine.maintenance) throw bad(`Máy "${machine.name}" đang BẢO TRÌ — không nhận luồng mới.`);
-  if (!isOnline(machine)) throw bad(`Máy "${machine.name}" đang offline — chưa thể phát ngay. Kiểm tra worker trên máy.`);
+  if (!isOnline(machine)) throw bad(`Máy "${machine.name}" đang ngoại tuyến — chưa thể phát ngay. Hãy kiểm tra worker trên máy.`);
   const cap = capacityBlock(machine, findPreset(presetId), await liveCountOn(machine.id, streamId));
   if (cap) throw bad(cap);
-  return machine.uploadMbps ? [] : [`Chưa biết băng thông máy "${machine.name}" — không kiểm được còn gánh mấy luồng.`];
+  return machine.uploadMbps ? [] : [`Chưa biết băng thông máy "${machine.name}" — không ước tính được máy còn nhận thêm bao nhiêu luồng.`];
 }
 
 export async function createStream(b: StreamInput, user: SessionUser) {
@@ -119,10 +119,10 @@ export async function createStream(b: StreamInput, user: SessionUser) {
   return { id: ref.id, warnings };
 }
 
-/** Sửa luồng — chỉ khi đã dừng (tránh đổi khoá/video/máy khi đang phát). */
+/** Sửa luồng — chỉ khi đã dừng (tránh đổi khóa/video/máy khi đang phát). */
 export async function editStream(id: string, b: StreamInput, user: SessionUser) {
   const cur = await getStream(id);
-  if (shouldBeLive(cur)) throw bad("Luồng đang chạy — hãy DỪNG trước khi sửa.");
+  if (shouldBeLive(cur)) throw bad("Luồng đang phát — hãy DỪNG trước khi sửa.");
   if (cur.moveState) throw bad("Luồng đang chuyển máy — chờ xong rồi sửa.");
   const { data } = await validate({ ...b, streamKey: b.streamKey || cur.streamKey }, id);
   await db.collection(COL.streams).doc(id).set({ ...data, desiredState: "stopped", updatedAt: nowISO(), updatedBy: user.email }, { merge: true });
@@ -138,14 +138,14 @@ export async function setDesired(id: string, desired: "live" | "stopped", user: 
     const machine = await readOne<Machine>(COL.machines, s.machineId);
     if (!machine) throw bad("Máy của luồng không còn tồn tại — sửa luồng chọn máy khác.");
     const assets = await Promise.all(streamAssetIds(s).map((a) => readOne<Asset>(COL.assets, a)));
-    if (assets.some((a) => !a || a.status !== "ready")) throw bad("Có video của luồng chưa sẵn sàng hoặc đã bị xoá.");
+    if (assets.some((a) => !a || a.status !== "ready")) throw bad("Có video của luồng chưa sẵn sàng hoặc đã bị xóa.");
     warnings = await preflightGoLive(machine, s.presetId, id);
     const sameKey = await db.collection(COL.streams).where("streamKey", "==", s.streamKey).get();
     const clash = sameKey.docs.find((d) => d.id !== id && shouldBeLive(d.data() as Stream));
-    if (clash) throw bad(`Khoá luồng đang được luồng "${(clash.data() as Stream).name}" dùng.`);
+    if (clash) throw bad(`Khóa luồng đang được luồng "${(clash.data() as Stream).name}" dùng.`);
     if (s.ytIssue) patch.ytIssue = null;   // người dùng đã kiểm tra YouTube → gỡ cờ để worker đẩy lại
   } else {
-    // Dừng tay: xoá mốc "live từ"; luồng hẹn giờ về THỦ CÔNG để không tự bật lại theo lịch.
+    // Dừng tay: xóa mốc "live từ"; luồng hẹn giờ về THỦ CÔNG để không tự bật lại theo lịch.
     Object.assign(patch, { liveSince: null, status: "stopped", health: "idle", ...(s.control === "schedule" ? { control: "manual" } : {}) });
     if (s.status === "error" || s.health === "error" || s.ytIssue || s.restartHalted || s.needsHuman) {
       await logIncident({
@@ -163,7 +163,7 @@ export async function setDesired(id: string, desired: "live" | "stopped", user: 
 
 export async function deleteStream(id: string, user: SessionUser) {
   const s = await getStream(id);
-  if (shouldBeLive(s)) throw bad("Luồng đang chạy — dừng trước khi xoá.");
+  if (shouldBeLive(s)) throw bad("Luồng đang phát — hãy dừng trước khi xóa.");
   await db.collection(COL.streams).doc(id).delete();
   await audit(user.email, "stream.delete", id, s.name);
 }

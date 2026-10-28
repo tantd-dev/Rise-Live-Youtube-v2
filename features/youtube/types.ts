@@ -29,7 +29,7 @@ export const watchUrlOf = (videoId: string) => `https://www.youtube.com/watch?v=
 const VIDEO_ID = /^[\w-]{11}$/;
 
 /**
- * Chuẩn hoá thứ người dùng dán vào ô "Link xem": chỉ MÃ buổi live (11 ký tự) hoặc bất kỳ dạng link YouTube nào
+ * Chuẩn hóa thứ người dùng dán vào ô "Link xem": chỉ MÃ buổi live (11 ký tự) hoặc bất kỳ dạng link YouTube nào
  * (youtu.be/…, /live/…, watch?v=…&t=…) → "https://www.youtube.com/watch?v=<mã>". Không nhận ra → trả nguyên văn.
  */
 export function normalizeWatchInput(raw: unknown): string {

@@ -22,16 +22,16 @@ export const streamAssetIds = (s: Pick<Stream, "assetIds" | "assetId">): string[
 export function streamBadge(s: Stream | (Omit<Stream, "streamKey"> & { shouldBeLive?: boolean }), machineOnline: boolean): { tone: "green" | "amber" | "red" | "gray" | "blue"; text: string } {
   const want = "shouldBeLive" in s && s.shouldBeLive != null ? s.shouldBeLive : shouldBeLive(s as Stream);
   if (s.moveState) return { tone: "blue", text: "Đang chuyển máy" };
-  if (s.ytIssue) return { tone: "red", text: "YouTube chặn/đình chỉ" };
-  if (s.needsHuman) return { tone: "red", text: "Dừng — cần sửa nguồn" };
-  if (!want) return s.control === "schedule" ? { tone: "gray", text: "Chờ lịch" } : { tone: "gray", text: "Đã dừng" };
+  if (s.ytIssue) return { tone: "red", text: "Bị YouTube chặn" };
+  if (s.needsHuman) return { tone: "red", text: "Đã dừng — lỗi nguồn video" };
+  if (!want) return s.control === "schedule" ? { tone: "gray", text: "Chờ đến giờ" } : { tone: "gray", text: "Đã dừng" };
   if (!machineOnline) return { tone: "amber", text: "Máy mất liên lạc" };
-  if (s.restartHalted) return { tone: "amber", text: "Tạm ngừng, tự thử lại" };
+  if (s.restartHalted) return { tone: "amber", text: "Tạm ngừng, sẽ tự thử lại" };
   if (s.status === "live") {
-    if (s.black && !s.allowBlack) return { tone: "amber", text: "Màn đen" };
-    if (s.slow) return { tone: "amber", text: "Đang tụt tốc độ" };
+    if (s.black && !s.allowBlack) return { tone: "amber", text: "Màn hình đen" };
+    if (s.slow) return { tone: "amber", text: "Phát chậm" };
     return { tone: "green", text: s.health === "good" ? "Đang phát" : "Đang khởi động" };
   }
-  if (s.health === "error") return { tone: "red", text: "Lỗi — đang tự bật lại" };
-  return { tone: "blue", text: "Chờ máy nhận lệnh" };
+  if (s.health === "error") return { tone: "red", text: "Lỗi — đang tự khởi động lại" };
+  return { tone: "blue", text: "Chờ máy phát nhận lệnh" };
 }

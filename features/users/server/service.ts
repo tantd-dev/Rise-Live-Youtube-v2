@@ -26,6 +26,6 @@ export async function upsertUser(input: { email: string; fullName?: string; role
 }
 
 export async function deleteUser(email: string, by: string): Promise<void> {
-  if (email === by) throw bad("Không tự xoá tài khoản của chính mình.");
+  if (email === by) throw bad("Không tự xóa tài khoản của chính mình.");
   await db.collection(COL.users).doc(email).delete();
 }

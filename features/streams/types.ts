@@ -8,7 +8,7 @@ export type FailoverMode = "disabled" | "manual" | "automatic";
 export type MoveState = "" | "stopping_source" | "starting_target" | "verifying";
 
 export const MODE_LABEL: Record<StreamMode, string> = { "stream-247": "Live 24/7", "live-pub": "Live Pub" };
-export const IMPORTANCE_LABEL: Record<Importance, string> = { normal: "Thường", priority: "⭐ Ưu tiên", critical: "🔥 Trọng yếu" };
+export const IMPORTANCE_LABEL: Record<Importance, string> = { normal: "Bình thường", priority: "Ưu tiên", critical: "Quan trọng" };
 
 export interface StreamIncident { kind: string; at: string; downSec: number; reason: string; machineId?: string }
 
@@ -71,7 +71,7 @@ export interface Stream {
   updatedAt?: string;
 }
 
-/** Luồng gửi ra giao diện: che khoá luồng, thêm trường suy ra. */
+/** Luồng gửi ra giao diện: che khóa luồng, thêm trường suy ra. */
 export interface StreamView extends Omit<Stream, "streamKey"> {
   streamKeyMasked: string;
   scheduleActive: boolean;

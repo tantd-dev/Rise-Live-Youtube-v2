@@ -1,20 +1,36 @@
 "use client";
 // Thẻ 1 luồng: trạng thái, số liệu phát, YouTube, và các nút thao tác.
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { Button, Card, Collapse, Dropdown, Select, Space, Tooltip, Typography, type MenuProps } from "antd";
+import {
+  ArrowLeftRight, CircleCheck, Clock, Ellipsis, ExternalLink, Eye, EyeOff, Film, Flag, FlagOff, KeyRound, LifeBuoy, Link2,
+  Moon, Pencil, Play, RefreshCw, Server, Square, Trash, TvMinimalPlay, Type, Zap,
+} from "lucide-react";
 import { useApp } from "@/components/app/AppContext";
-import { Pill } from "@/components/ui/primitives";
+import { Pill, TONE_HEX } from "@/components/ui/primitives";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { api } from "@/lib/client/api";
 import { fmtAgo, fmtDuration, fmtTime } from "@/lib/client/format";
 import { IMPORTANCE_LABEL, MODE_LABEL, type StreamView } from "../types";
 import { streamBadge } from "../rules";
 
+const { Text } = Typography;
+
+function Meta({ icon, children, danger }: { icon?: ReactNode; children: ReactNode; danger?: boolean }) {
+  return (
+    <Text type={danger ? "danger" : "secondary"} style={{ fontSize: 13, display: "flex", gap: 6, alignItems: "baseline", overflowWrap: "anywhere" }}>
+      {icon && <span style={{ flex: "none", position: "relative", top: 2 }}>{icon}</span>}
+      <span>{children}</span>
+    </Text>
+  );
+}
+
 export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () => void; onMove: () => void }) {
-  const { data, run, busy, can } = useApp();
+  const { data, run, busy, can, confirm, prompt } = useApp();
   const [key, setKey] = useState("");
   const [thumbErr, setThumbErr] = useState(false);
   const machine = data?.machines.find((m) => m.id === s.machineId);
-  const assetNames = (s.assetIds?.length ? s.assetIds : [s.assetId]).map((id) => data?.assets.find((a) => a.id === id)?.name ?? "(video đã xoá)");
+  const assetNames = (s.assetIds?.length ? s.assetIds : [s.assetId]).map((id) => data?.assets.find((a) => a.id === id)?.name ?? "(video đã xóa)");
   const badge = streamBadge(s, !!machine?.online);
   const op = can("streams.operate");
   const live = s.status === "live" && s.shouldBeLive;
@@ -25,73 +41,108 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
     const r = await run(() => api<{ streamKey: string }>(`/api/streams/${s.id}/key`));
     if (r) setKey(r.streamKey);
   };
-  const promptPatch = (label: string, field: "name" | "watchUrl", cur: string) => {
-    const v = prompt(label, cur);
-    if (v != null && v.trim() !== cur) void call("", { [field]: v.trim() }, "Đã lưu.", "PATCH");
+  const rename = async () => {
+    const v = await prompt({ title: "Đổi tên luồng", initial: s.name, required: true });
+    if (v != null && v !== s.name) void call("", { name: v }, "Đã đổi tên luồng.", "PATCH");
+  };
+  const editWatchUrl = async () => {
+    const v = await prompt({ title: "Link xem trên YouTube", label: "Dán mã buổi live hoặc link YouTube (hệ thống tự đổi thành youtube.com/watch?v=…):", initial: s.watchUrl ?? "" });
+    if (v != null && v !== (s.watchUrl ?? "")) void call("", { watchUrl: v }, "Đã lưu link xem.", "PATCH");
+  };
+  const flagYoutube = async () => {
+    const note = await prompt({ title: "Báo YouTube chặn/đình chỉ luồng", label: "Worker sẽ DỪNG đẩy luồng này lên YouTube. Ghi chú (không bắt buộc):", okText: "Gắn cờ" });
+    if (note != null) void call("/youtube-issue", { flag: true, note }, "Đã gắn cờ. Worker đã dừng đẩy luồng.");
+  };
+  const stop = async () => {
+    if (await confirm({ title: `Dừng luồng “${s.name}”?`, okText: "Dừng phát", danger: true })) void call("/control", { desired: "stopped" }, "Đã gửi lệnh dừng.");
+  };
+  const remove = async () => {
+    if (await confirm({ title: `Xóa luồng “${s.name}”?`, content: "Thao tác này không thể hoàn tác.", okText: "Xóa", danger: true })) void call("", undefined, "Đã xóa luồng.", "DELETE");
+  };
+  const convert = async () => {
+    if (await confirm({ title: "Chuyển luồng này thành Live 24/7?", okText: "Chuyển" })) void call("/convert", {}, "Đã chuyển sang Live 24/7.");
   };
 
+  const more: NonNullable<MenuProps["items"]> = [
+    { key: "rename", icon: <Type size={14} />, label: "Đổi tên", onClick: rename },
+    { key: "watch", icon: <Link2 size={14} />, label: "Sửa link xem", onClick: editWatchUrl },
+    ...(s.watchUrl && data?.config.ytApiKey ? [{ key: "check", icon: <RefreshCw size={14} />, label: "Kiểm tra trên YouTube", onClick: () => void run(() => api("/api/youtube/check", { body: { streamIds: [s.id] } }), "Đã kiểm tra trạng thái trên YouTube.") }] : []),
+    ...(s.black ? [{ key: "black", icon: <Moon size={14} />, label: s.allowBlack ? "Bật lại cảnh báo màn hình đen" : "Đánh dấu màn hình tối là chủ ý", onClick: () => void call("", { allowBlack: !s.allowBlack }, "Đã lưu.", "PATCH") }] : []),
+    s.ytIssue
+      ? { key: "unflag", icon: <FlagOff size={14} />, label: "Gỡ cờ YouTube chặn", onClick: () => void call("/youtube-issue", { flag: false }, "Đã gỡ cờ YouTube.") }
+      : { key: "flag", icon: <Flag size={14} />, label: "Báo YouTube chặn/đình chỉ", onClick: flagYoutube },
+    ...(s.mode === "live-pub" ? [{ key: "convert", icon: <Zap size={14} />, label: "Chuyển thành Live 24/7", onClick: convert }] : []),
+    ...(!s.shouldBeLive ? [{ type: "divider" as const }, { key: "delete", icon: <Trash size={14} />, label: "Xóa luồng", danger: true, onClick: remove }] : []),
+  ];
+
+  const ytStatus = s.yt && (s.yt.found
+    ? <> · YouTube: {s.yt.liveBroadcastContent === "live" ? `đang phát trực tiếp${s.yt.concurrentViewers != null ? `, ${s.yt.concurrentViewers.toLocaleString("vi-VN")} người xem` : ""}` : s.yt.actualEndTime ? "đã kết thúc" : s.yt.liveBroadcastContent === "upcoming" ? "sắp phát" : s.yt.liveBroadcastContent ?? "không rõ"} (kiểm tra {fmtAgo(s.yt.checkedAt)})</>
+    : <Text type="danger"> · YouTube: không tìm thấy video</Text>);
+
   return (
-    <div className={`stream-card tone-${badge.tone}`}>
-      <div className="thumb">
+    <Card className="stream-card" size="small" style={{ borderInlineStart: `4px solid ${TONE_HEX[badge.tone]}` }}>
+      <div className="stream-thumb">
         {live && !thumbErr
-          ? <img src={`/api/thumbs/${s.id}?t=${Math.floor(Date.now() / 60000)}`} alt="" onError={() => setThumbErr(true)} />
-          : <span>{live ? "chưa có ảnh" : "—"}</span>}
+          ? <img src={`/api/thumbs/${s.id}?t=${Math.floor(Date.now() / 60000)}`} alt={`Ảnh đang phát của ${s.name}`} onError={() => setThumbErr(true)} />
+          : <Space direction="vertical" align="center" size={4}><TvMinimalPlay size={24} />{live ? "Chưa có ảnh xem trước" : "Không phát"}</Space>}
       </div>
-      <div className="stream-body">
-        <div className="stream-title">
-          <b>{s.name}</b>
+      <div className="stream-card-body">
+        <Space size={6} wrap>
+          <Text strong style={{ fontSize: 15 }}>{s.name}</Text>
           <Pill tone={badge.tone}>{badge.text}</Pill>
           <Pill>{MODE_LABEL[s.mode]}</Pill>
           {s.importance && s.importance !== "normal" && <Pill tone="amber">{IMPORTANCE_LABEL[s.importance]}</Pill>}
-          {s.failoverMode === "automatic" && <Pill tone="blue">🛟 tự cứu</Pill>}
-        </div>
-        <div className="meta">
-          🖥 {machine?.name ?? "(máy đã xoá)"} · 🎞 {assetNames.join(", ")}{assetNames.length > 1 ? ` (${s.playMode === "random" ? "ngẫu nhiên" : "lần lượt"})` : ""}
-        </div>
+          {s.failoverMode === "automatic" && <Pill tone="blue" icon={<LifeBuoy size={12} />}>Dự phòng tự động</Pill>}
+        </Space>
+        <Meta icon={<Server size={13} />}>
+          {machine?.name ?? "(máy đã xóa)"}
+          <span style={{ margin: "0 6px" }}>·</span>
+          <Film size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
+          {assetNames.join(", ")}{assetNames.length > 1 ? ` (${s.playMode === "random" ? "phát ngẫu nhiên" : "phát lần lượt"})` : ""}
+        </Meta>
         {s.control === "schedule" && s.schedule && (
-          <div className="meta">⏰ Hẹn giờ từ {fmtTime(s.schedule.start)}{s.schedule.durationMin ? ` · ${s.schedule.durationMin} phút${s.schedule.repeat === "daily" ? " · hằng ngày" : ""}` : " · liên tục"}{s.nextStartISO ? ` · lần tới ${fmtTime(s.nextStartISO)}` : ""}</div>
+          <Meta icon={<Clock size={13} />}>
+            Hẹn giờ từ {fmtTime(s.schedule.start)}{s.schedule.durationMin ? ` · ${s.schedule.durationMin} phút${s.schedule.repeat === "daily" ? " · hằng ngày" : ""}` : " · phát liên tục"}{s.nextStartISO ? ` · lần tới: ${fmtTime(s.nextStartISO)}` : ""}
+          </Meta>
         )}
         {live && (
-          <div className="meta">
-            Live từ {fmtTime(s.liveSince)} · {s.bitrateKbps != null ? `${(s.bitrateKbps / 1000).toFixed(1)} Mbps` : "—"} · tốc độ {s.speed != null ? `${s.speed}×` : "—"} · chạy liền {fmtDuration(s.uptimeSec)} · tự bật lại {s.restarts ?? 0} lần
-          </div>
+          <Meta icon={<Play size={13} />}>
+            Phát từ {fmtTime(s.liveSince)} · {s.bitrateKbps != null ? `${(s.bitrateKbps / 1000).toFixed(1)} Mbps` : "—"} · tốc độ {s.speed != null ? `${s.speed}×` : "—"} · đã chạy liên tục {fmtDuration(s.uptimeSec)} · tự khởi động lại {s.restarts ?? 0} lần
+          </Meta>
         )}
-        {(s.haltReason || (s.health === "error" && s.error)) && <div className="meta err">Lý do: {s.haltReason || s.error}</div>}
-        {s.ytIssue && <div className="meta err">YouTube: {s.ytIssue.note || "bị gắn cờ chặn/đình chỉ"} ({s.ytIssue.by ?? s.ytIssue.source}, {fmtTime(s.ytIssue.at)})</div>}
-        <div className="meta">
-          🔑 <code>{key || s.streamKeyMasked}</code>{op && <button className="btn-link" onClick={reveal}>{key ? "ẩn" : "hiện"}</button>}{key && <CopyButton text={key} />}
-          {" · "}▶ {s.watchUrl ? <a href={s.watchUrl} target="_blank" rel="noreferrer">xem trên YouTube</a> : <span className="muted">chưa có link xem</span>}
-          {s.yt && (s.yt.found
-            ? <span className="muted"> · YouTube: {s.yt.liveBroadcastContent === "live" ? `🔴 đang live${s.yt.concurrentViewers != null ? `, ${s.yt.concurrentViewers} người xem` : ""}` : s.yt.actualEndTime ? "đã kết thúc" : s.yt.liveBroadcastContent ?? "?"} ({fmtAgo(s.yt.checkedAt)})</span>
-            : <span className="err"> · YouTube: không tìm thấy video</span>)}
-        </div>
+        {(s.haltReason || (s.health === "error" && s.error)) && <Meta danger>Lý do: {s.haltReason || s.error}</Meta>}
+        {s.ytIssue && <Meta danger>YouTube: {s.ytIssue.note || "bị gắn cờ chặn/đình chỉ"} ({s.ytIssue.by ?? (s.ytIssue.source === "auto" ? "tự động" : "thủ công")}, {fmtTime(s.ytIssue.at)})</Meta>}
+        <Meta icon={<KeyRound size={13} />}>
+          <Text code style={{ fontSize: 12 }}>{key || s.streamKeyMasked}</Text>
+          {op && <Tooltip title={key ? "Ẩn khóa luồng" : "Hiện khóa luồng"}><Button type="text" size="small" icon={key ? <EyeOff size={14} /> : <Eye size={14} />} onClick={reveal} /></Tooltip>}
+          {key && <CopyButton text={key} label="Sao chép khóa luồng" iconOnly />}
+          <span style={{ margin: "0 6px" }}>·</span>
+          {s.watchUrl ? <a href={s.watchUrl} target="_blank" rel="noreferrer">Xem trên YouTube <ExternalLink size={12} style={{ verticalAlign: -1 }} /></a> : <Text type="secondary">Chưa có link xem</Text>}
+          {ytStatus}
+        </Meta>
         {!!s.recentIncidents?.length && (
-          <details className="meta"><summary>{s.incidentCount ?? s.recentIncidents.length} lần gián đoạn tự phục hồi</summary>
-            <ul>{s.recentIncidents.map((ev, i) => <li key={i}>{fmtTime(ev.at)} · mất {ev.downSec}s · {ev.reason || ev.kind}</li>)}</ul>
-          </details>
+          <Collapse ghost size="small" style={{ marginInline: -8 }} items={[{
+            key: "inc",
+            label: <Text type="secondary" style={{ fontSize: 13 }}><CircleCheck size={13} style={{ verticalAlign: -2, marginRight: 4 }} />{s.incidentCount ?? s.recentIncidents.length} lần gián đoạn đã tự phục hồi</Text>,
+            children: <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>{s.recentIncidents.map((ev, i) => <li key={i}>{fmtTime(ev.at)} · mất sóng {fmtDuration(ev.downSec)} · {ev.reason || ev.kind}</li>)}</ul>,
+          }]} />
         )}
         {op && (
-          <div className="row-actions">
+          <Space size={8} wrap style={{ marginTop: 4 }}>
             {s.shouldBeLive
-              ? <button className="btn-danger" disabled={busy} onClick={() => confirm(`Dừng luồng "${s.name}"?`) && call("/control", { desired: "stopped" }, "Đã gửi lệnh dừng.")}>⏹ Dừng</button>
-              : <button className="btn-primary" disabled={busy} onClick={() => call("/control", { desired: "live" }, "Đã gửi lệnh lên sóng — máy nhận trong vài giây.")}>▶ Lên sóng</button>}
-            {!s.shouldBeLive && <button disabled={busy} onClick={onEdit}>✎ Sửa</button>}
-            {s.shouldBeLive && !s.moveState && <button disabled={busy} onClick={onMove}>⇄ Chuyển máy</button>}
-            <button disabled={busy} onClick={() => promptPatch("Tên luồng mới:", "name", s.name)}>Đổi tên</button>
-            <button disabled={busy} onClick={() => promptPatch("Mã buổi live hoặc link YouTube (tự đổi thành youtube.com/watch?v=…):", "watchUrl", s.watchUrl ?? "")}>Link xem</button>
-            {s.watchUrl && data?.config.ytApiKey && <button disabled={busy} onClick={() => run(() => api("/api/youtube/check", { body: { streamIds: [s.id] } }), "Đã kiểm YouTube.")}>Kiểm YouTube</button>}
-            {s.black && <button disabled={busy} onClick={() => call("", { allowBlack: !s.allowBlack }, "Đã lưu.", "PATCH")}>{s.allowBlack ? "Bật lại cảnh báo đen" : "✓ Nền đen chủ ý"}</button>}
-            {s.ytIssue
-              ? <button disabled={busy} onClick={() => call("/youtube-issue", { flag: false }, "Đã gỡ cờ YouTube.")}>Gỡ cờ YouTube</button>
-              : <button disabled={busy} onClick={() => { const note = prompt("Báo YouTube chặn/đình chỉ luồng này (worker sẽ DỪNG đẩy). Ghi chú:"); if (note != null) void call("/youtube-issue", { flag: true, note }, "Đã gắn cờ — worker dừng đẩy."); }}>Báo YouTube chặn</button>}
-            {s.mode === "live-pub" && <button disabled={busy} onClick={() => confirm("Chuyển luồng này thành Live 24/7?") && call("/convert", {}, "Đã chuyển sang Live 24/7.")}>→ 24/7</button>}
-            <select value={s.importance ?? "normal"} disabled={busy} onChange={(e) => call("", { importance: e.target.value }, "Đã đổi mức ưu tiên.", "PATCH")} title="Mức ưu tiên">
-              <option value="normal">Thường</option><option value="priority">⭐ Ưu tiên</option><option value="critical">🔥 Trọng yếu</option>
-            </select>
-            {!s.shouldBeLive && <button className="btn-ghost danger" disabled={busy} onClick={() => confirm(`Xoá luồng "${s.name}"?`) && call("", undefined, "Đã xoá luồng.", "DELETE")}>Xoá</button>}
-          </div>
+              ? <Button danger type="primary" icon={<Square size={14} />} disabled={busy} onClick={stop}>Dừng phát</Button>
+              : <Button type="primary" icon={<Play size={14} />} disabled={busy} onClick={() => call("/control", { desired: "live" }, "Đã gửi lệnh lên sóng. Máy phát sẽ nhận lệnh sau vài giây.")}>Lên sóng</Button>}
+            {!s.shouldBeLive && <Button icon={<Pencil size={14} />} disabled={busy} onClick={onEdit}>Sửa</Button>}
+            {s.shouldBeLive && !s.moveState && <Button icon={<ArrowLeftRight size={14} />} disabled={busy} onClick={onMove}>Chuyển máy</Button>}
+            <Select size="middle" value={s.importance ?? "normal"} disabled={busy} style={{ width: 140 }} title="Mức ưu tiên"
+              onChange={(v) => call("", { importance: v }, "Đã đổi mức ưu tiên.", "PATCH")}
+              options={[{ value: "normal", label: "Bình thường" }, { value: "priority", label: "Ưu tiên" }, { value: "critical", label: "Quan trọng" }]} />
+            <Dropdown menu={{ items: more }} trigger={["click"]} disabled={busy}>
+              <Button icon={<Ellipsis size={14} />}>Thêm</Button>
+            </Dropdown>
+          </Space>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
