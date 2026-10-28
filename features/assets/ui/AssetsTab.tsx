@@ -60,7 +60,7 @@ export function AssetsTab() {
         </Space>
       ),
     },
-    { title: "Máy phát", dataIndex: "machineId", render: (_, a) => mName(a.machineId) },
+    { title: "VPS", dataIndex: "machineId", render: (_, a) => mName(a.machineId) },
     { title: "Trạng thái", dataIndex: "status", render: (_, a) => <StatusCell a={a} /> },
     {
       title: "Thông tin", key: "info", render: (_, a) => {
@@ -84,12 +84,12 @@ export function AssetsTab() {
           <Space size={0}>
             <Dropdown disabled={busy || a.status !== "ready" || !targets.length} trigger={["click"]}
               menu={{ items: targets.map((m) => ({ key: m.id, label: m.name })), onClick: ({ key }) => void copyTo(a, key) }}>
-              <Tooltip title={a.status !== "ready" ? "Chỉ sao chép được video đã sẵn sàng" : "Sao chép sang máy phát khác"}>
+              <Tooltip title={a.status !== "ready" ? "Chỉ sao chép được video đã sẵn sàng" : "Sao chép sang VPS khác"}>
                 <Button type="text" size="small" icon={<Copy size={15} />} disabled={busy || a.status !== "ready" || !targets.length} />
               </Tooltip>
             </Dropdown>
             <Tooltip title="Đổi tên"><Button type="text" size="small" icon={<Pencil size={15} />} disabled={busy} onClick={() => rename(a)} /></Tooltip>
-            <Popconfirm title={`Xóa video “${a.name}”?`} description="File trên máy phát cũng sẽ bị xóa." okText="Xóa" cancelText="Hủy" okButtonProps={{ danger: true }}
+            <Popconfirm title={`Xóa video “${a.name}”?`} description="File trên VPS cũng sẽ bị xóa." okText="Xóa" cancelText="Hủy" okButtonProps={{ danger: true }}
               disabled={users.length > 0} onConfirm={() => run(() => api(`/api/assets/${a.id}`, { method: "DELETE" }), "Đã xóa video.")}>
               <Tooltip title={users.length ? "Video đang được Phiên live sử dụng" : "Xóa"}>
                 <Button type="text" size="small" danger icon={<Trash size={15} />} disabled={busy || users.length > 0} />
@@ -122,7 +122,7 @@ export function AssetsTab() {
         pagination={{ pageSize: 20, hideOnSinglePage: true, showSizeChanger: false }}
         locale={{ emptyText: "Chưa có video nào." }}
         toolBarRender={() => [
-          <Select key="m" allowClear placeholder="Tất cả máy phát" style={{ minWidth: 200 }} value={machineFilter} onChange={setMachineFilter}
+          <Select key="m" allowClear placeholder="Tất cả VPS" style={{ minWidth: 200 }} value={machineFilter} onChange={setMachineFilter}
             options={machines.map((m) => ({ value: m.id, label: m.name }))} />,
         ]}
       />

@@ -18,7 +18,7 @@ export function FailoverSwitchCard({ sw }: { sw: FailoverSwitch }) {
   return (
     <ProCard
       title={<Space><LifeBuoy size={18} />Dự phòng tự động</Space>}
-      subTitle="Tự chuyển live sang máy phát khác khi máy đang phát gặp sự cố"
+      subTitle="Tự chuyển live sang VPS khác khi máy đang phát gặp sự cố"
       headerBordered
       extra={!sw.envOff && (
         <Button type={sw.disabled ? "primary" : "default"} danger={!sw.disabled} disabled={busy} onClick={toggle}
@@ -38,7 +38,7 @@ export function FailoverSwitchCard({ sw }: { sw: FailoverSwitch }) {
       ) : (
         <Space wrap>
           <Pill tone="green">Đang bật</Pill>
-          <Typography.Text type="secondary">Khi một máy phát mất liên lạc, các live có bật dự phòng sẽ tự chuyển sang máy khác đã có sẵn video.</Typography.Text>
+          <Typography.Text type="secondary">Khi một VPS mất liên lạc, các live có bật dự phòng sẽ tự chuyển sang máy khác đã có sẵn video.</Typography.Text>
         </Space>
       )}
     </ProCard>

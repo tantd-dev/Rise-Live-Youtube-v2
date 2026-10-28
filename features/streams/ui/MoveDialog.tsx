@@ -21,7 +21,7 @@ export function MoveDialog({ stream, onClose }: { stream: StreamView; onClose: (
     if (await run(() => api(`/api/streams/${stream.id}/move`, { body: { targetId: c.machineId } }), "Đang chuyển máy. Theo dõi trạng thái ở thẻ live.")) onClose();
   };
   return (
-    <Modal open title={`Chuyển máy phát: ${stream.name}`} onCancel={onClose} footer={null} width={640} destroyOnHidden>
+    <Modal open title={`Chuyển VPS: ${stream.name}`} onCancel={onClose} footer={null} width={640} destroyOnHidden>
       {err && <Alert type="error" showIcon message={err} style={{ marginBottom: 12 }} />}
       <Table<MoveCandidate>
         rowKey="machineId"
@@ -29,9 +29,9 @@ export function MoveDialog({ stream, onClose }: { stream: StreamView; onClose: (
         loading={!cands && !err}
         dataSource={cands ?? []}
         pagination={false}
-        locale={{ emptyText: "Không có máy phát nào khác." }}
+        locale={{ emptyText: "Không có VPS nào khác." }}
         columns={[
-          { title: "Máy phát", dataIndex: "name", render: (v: string) => <Typography.Text strong>{v}</Typography.Text> },
+          { title: "VPS", dataIndex: "name", render: (v: string) => <Typography.Text strong>{v}</Typography.Text> },
           { title: "Khả năng chuyển", key: "ok", render: (_, c) => (c.ok ? <Pill tone="green">Chuyển được</Pill> : <Typography.Text type="danger">{c.reasons.join(", ")}</Typography.Text>) },
           { title: "Băng thông còn trống", dataIndex: "freeMbps", render: (v: number | null) => (v != null ? `${v} Mbps` : "—") },
           { key: "act", align: "right", render: (_, c) => <Button size="small" type="primary" icon={<ArrowLeftRight size={14} />} disabled={!c.ok || busy} onClick={() => move(c)}>Chuyển</Button> },

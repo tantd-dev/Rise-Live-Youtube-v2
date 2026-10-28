@@ -35,7 +35,7 @@ export function computeAlerts(machines: Machine[], streams: Stream[], assets: As
   if (quiet.length >= 2) {
     add({
       level: "critical", code: "RL-NET-006", kind: "cluster_quiet", id: "cluster", priority: true,
-      text: `Mất liên lạc với ${quiet.length}/${machines.length} máy phát cùng lúc (${quiet.map((m) => `"${m.name}"`).join(", ")}) — nhiều khả năng lỗi nằm ở phía máy chủ điều khiển. live đi thẳng từ VPS lên YouTube nên có thể vẫn đang phát; hãy kiểm tra trên YouTube trước.`
+      text: `Mất liên lạc với ${quiet.length}/${machines.length} VPS cùng lúc (${quiet.map((m) => `"${m.name}"`).join(", ")}) — nhiều khả năng lỗi nằm ở phía máy chủ điều khiển. live đi thẳng từ VPS lên YouTube nên có thể vẫn đang phát; hãy kiểm tra trên YouTube trước.`
     });
   }
 

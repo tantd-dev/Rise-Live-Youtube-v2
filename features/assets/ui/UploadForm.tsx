@@ -12,8 +12,8 @@ function putWithProgress(url: string, file: File, onPct: (p: number) => void): P
     const x = new XMLHttpRequest();
     x.open("PUT", url);
     x.upload.onprogress = (e) => { if (e.lengthComputable) onPct(Math.round((e.loaded * 100) / e.total)); };
-    x.onload = () => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error(`Máy phát trả lỗi ${x.status}: ${x.responseText.slice(0, 200)}`)));
-    x.onerror = () => reject(new Error("Không kết nối được tới máy phát (kiểm tra cổng 8099 hoặc địa chỉ HTTPS của máy)."));
+    x.onload = () => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error(`VPS trả lỗi ${x.status}: ${x.responseText.slice(0, 200)}`)));
+    x.onerror = () => reject(new Error("Không kết nối được tới VPS (kiểm tra cổng 8099 hoặc địa chỉ HTTPS của máy)."));
     x.send(file);
   });
 }
@@ -56,8 +56,8 @@ export function UploadForm() {
             <Button icon={<FileVideoCamera size={14} />}>Chọn file…</Button>
           </Upload>
         </Form.Item>
-        <Form.Item label="Tải lên máy phát">
-          <Select value={machineId} onChange={setMachineId} placeholder="Chọn máy phát"
+        <Form.Item label="Tải lên VPS">
+          <Select value={machineId} onChange={setMachineId} placeholder="Chọn VPS"
             options={data.machines.map((m) => ({ value: m.id, label: `${m.name}${m.uploadHttpsUrl ? " (HTTPS)" : ""}` }))} />
         </Form.Item>
         <Form.Item label=" ">

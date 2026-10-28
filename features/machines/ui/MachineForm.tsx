@@ -1,5 +1,5 @@
 "use client";
-// Form thêm / sửa máy phát.
+// Form thêm / sửa VPS.
 import { DatePicker, Form, Input, InputNumber, Modal, Select } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { useApp } from "@/components/app/AppContext";
@@ -22,12 +22,12 @@ export function MachineForm({ machine, onClose, onCreated }: { machine?: Machine
   const submit = async (v: Values) => {
     const body = { ...v, uploadMbps: v.uploadMbps ?? 0, costAmount: v.costAmount ?? null, costRenewAt: v.costRenewAt ? v.costRenewAt.format("YYYY-MM-DD") : "" };
     const r = machine
-      ? await run(() => api(`/api/machines/${machine.id}`, { method: "PATCH", body }), "Đã lưu thông tin máy phát.")
-      : await run(() => api<{ id: string }>("/api/machines", { body }), "Đã thêm máy phát. Bước tiếp theo: cài worker lên VPS.");
+      ? await run(() => api(`/api/machines/${machine.id}`, { method: "PATCH", body }), "Đã lưu thông tin VPS.")
+      : await run(() => api<{ id: string }>("/api/machines", { body }), "Đã thêm VPS. Bước tiếp theo: cài worker lên VPS.");
     if (r) { onClose(); if (!machine && r && typeof r === "object" && "id" in r) onCreated?.(String(r.id)); }
   };
   return (
-    <Modal open title={machine ? `Sửa máy phát “${machine.name}”` : "Thêm máy phát (VPS)"} onCancel={onClose} width={860} destroyOnHidden
+    <Modal open title={machine ? `Sửa VPS “${machine.name}”` : "Thêm VPS (VPS)"} onCancel={onClose} width={860} destroyOnHidden
       okText={machine ? "Lưu" : "Thêm máy"} cancelText="Hủy" confirmLoading={busy} onOk={() => form.submit()}>
       <Form form={form} layout="vertical" initialValues={initial} onFinish={submit}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", columnGap: 16 }}>

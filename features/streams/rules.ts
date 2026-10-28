@@ -33,5 +33,5 @@ export function streamBadge(s: Stream | (Omit<Stream, "streamKey"> & { shouldBeL
     return { tone: "green", text: s.health === "good" ? "Đang phát" : "Đang khởi động" };
   }
   if (s.health === "error") return { tone: "red", text: "Lỗi — đang tự khởi động lại" };
-  return { tone: "blue", text: "Chờ máy phát nhận lệnh" };
+  return { tone: "blue", text: "Chờ VPS nhận lệnh" };
 }

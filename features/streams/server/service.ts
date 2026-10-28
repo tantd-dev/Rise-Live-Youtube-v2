@@ -32,7 +32,7 @@ async function validate(b: StreamInput, excludeId: string | null) {
   const name = str(b.name, 120), machineId = str(b.machineId, 80), streamKey = str(b.streamKey, 200);
   const mode: StreamMode = b.mode === "live-pub" ? "live-pub" : "stream-247";
   if (!name) throw bad("Thiếu tên live.");
-  if (!machineId) throw bad("Chọn máy phát.");
+  if (!machineId) throw bad("Chọn VPS.");
   const key = checkStreamKey(streamKey);
   if (!key.ok) throw bad(key.error);
   const watch = checkWatchUrl(b.watchUrl);

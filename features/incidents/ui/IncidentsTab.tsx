@@ -28,7 +28,7 @@ export function IncidentsTab() {
   const columns: ProColumns<IncidentRow>[] = [
     { title: "Thời điểm", dataIndex: "at", width: 170, render: (_, r) => fmtTime(r.at) },
     { title: "Phiên live", dataIndex: "streamName" },
-    { title: "Máy phát", dataIndex: "machineId", render: (_, r) => mName(r.machineId) },
+    { title: "VPS", dataIndex: "machineId", render: (_, r) => mName(r.machineId) },
     { title: "Loại sự cố", dataIndex: "kind" },
     { title: "Chi tiết", dataIndex: "detail", render: (_, r) => <Typography.Text style={{ fontSize: 13 }}>{r.detail}</Typography.Text> },
     { title: "Thời gian mất sóng", dataIndex: "downSec", width: 150, render: (_, r) => (r.downSec != null ? fmtDuration(r.downSec) : "—") },
@@ -49,7 +49,7 @@ export function IncidentsTab() {
         pagination={{ pageSize: 50, hideOnSinglePage: true, showSizeChanger: false }}
         locale={{ emptyText: "Chưa có sự cố nào." }}
         toolBarRender={() => [
-          <Select key="m" allowClear placeholder="Tất cả máy phát" style={{ minWidth: 200 }} value={machine} onChange={setMachine}
+          <Select key="m" allowClear placeholder="Tất cả VPS" style={{ minWidth: 200 }} value={machine} onChange={setMachine}
             options={data?.machines.map((m) => ({ value: m.id, label: m.name }))} />,
           <Button key="r" icon={<RefreshCw size={14} />} loading={loading} onClick={load}>Làm mới</Button>,
         ]}

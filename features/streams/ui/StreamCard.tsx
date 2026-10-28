@@ -131,7 +131,7 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
           <Space size={8} wrap style={{ marginTop: 4 }}>
             {s.shouldBeLive
               ? <Button danger type="primary" icon={<Square size={14} />} disabled={busy} onClick={stop}>Dừng phát</Button>
-              : <Button type="primary" icon={<Play size={14} />} disabled={busy} onClick={() => call("/control", { desired: "live" }, "Đã gửi lệnh lên sóng. Máy phát sẽ nhận lệnh sau vài giây.")}>Lên sóng</Button>}
+              : <Button type="primary" icon={<Play size={14} />} disabled={busy} onClick={() => call("/control", { desired: "live" }, "Đã gửi lệnh lên sóng. VPS sẽ nhận lệnh sau vài giây.")}>Lên sóng</Button>}
             {!s.shouldBeLive && <Button icon={<Pencil size={14} />} disabled={busy} onClick={onEdit}>Sửa</Button>}
             {s.shouldBeLive && !s.moveState && <Button icon={<ArrowLeftRight size={14} />} disabled={busy} onClick={onMove}>Chuyển máy</Button>}
             <Select size="middle" value={s.importance ?? "normal"} disabled={busy} style={{ width: 140 }} title="Mức ưu tiên"

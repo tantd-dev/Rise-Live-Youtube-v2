@@ -9,7 +9,7 @@ export const ROLE_LABEL: Record<Role, string> = {
 
 /** Mô tả quyền của từng vai trò (hiện cạnh ô chọn vai trò). */
 export const ROLE_HINT: Record<Role, string> = {
-  admin: "Toàn quyền: máy phát, người dùng, cài đặt hệ thống",
+  admin: "Toàn quyền: VPS, người dùng, cài đặt hệ thống",
   operator: "Quản lý Phiên live và kho video",
   viewer: "Chỉ xem, không thao tác",
 };

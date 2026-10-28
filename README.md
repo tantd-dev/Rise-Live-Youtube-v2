@@ -40,7 +40,7 @@ npm run emulator   # 1. Firestore emulator (cổng theo FIRESTORE_EMULATOR_HOST,
 npm run dev        # 2. http://localhost:3000 → "Đăng nhập thử" (ALLOW_DEV_LOGIN=1)
 ```
 
-Trong giao diện: **Máy phát → Thêm máy phát** (IP `127.0.0.1` khi chạy thử) → hộp "Cài worker" hiện **mã máy** + mã xác thực riêng.
+Trong giao diện: **VPS → Thêm VPS** (IP `127.0.0.1` khi chạy thử) → hộp "Cài worker" hiện **mã máy** + mã xác thực riêng.
 Chép 2 dòng `RISE_LIVE_MACHINE=…` / `RISE_LIVE_TOKEN=…` vào `.env.local`, rồi:
 
 ```bash

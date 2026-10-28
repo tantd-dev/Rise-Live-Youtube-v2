@@ -51,7 +51,7 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
     };
     const r = await run(
       () => stream ? api(`/api/streams/${stream.id}`, { method: "PUT", body }) : api<{ warnings?: string[] }>("/api/streams", { body }),
-      (res) => [stream ? "Đã lưu Phiên live." : v.control === "manual" ? "Đã tạo live. Máy phát sẽ lên sóng sau vài giây." : "Đã tạo live hẹn giờ.", ...((res as { warnings?: string[] })?.warnings ?? [])].join(" "),
+      (res) => [stream ? "Đã lưu Phiên live." : v.control === "manual" ? "Đã tạo live. VPS sẽ lên sóng sau vài giây." : "Đã tạo live hẹn giờ.", ...((res as { warnings?: string[] })?.warnings ?? [])].join(" "),
     );
     if (r) onClose();
   };
@@ -74,8 +74,8 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
               { value: "live-pub", label: "Live Pub — phát một buổi, mất kết nối quá 90 giây thì kết thúc" },
             ]} />
           </Form.Item>
-          <Form.Item name="machineId" label="Máy phát" rules={[{ required: true, message: "Chọn máy phát" }]}>
-            <Select placeholder="Chọn máy phát" options={machines.map((m) => ({
+          <Form.Item name="machineId" label="VPS" rules={[{ required: true, message: "Chọn VPS" }]}>
+            <Select placeholder="Chọn VPS" options={machines.map((m) => ({
               value: m.id, disabled: m.maintenance,
               label: `${m.name} · ${m.online ? "trực tuyến" : "ngoại tuyến"}${m.maintenance ? " · đang bảo trì" : ""} · ${m.liveCount} live`,
             }))} />
@@ -119,7 +119,7 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
               { value: "critical", label: "Quan trọng" },
             ]} />
           </Form.Item>
-          <Form.Item name="failoverMode" label="Dự phòng khi máy phát gặp sự cố"
+          <Form.Item name="failoverMode" label="Dự phòng khi VPS gặp sự cố"
             extra={importance !== "normal" ? "live ưu tiên/quan trọng luôn được tự động chuyển máy." : undefined}>
             <Select disabled={importance !== "normal"}
               options={[{ value: "disabled", label: "Không dự phòng" }, { value: "manual", label: "Chuyển máy thủ công" }, { value: "automatic", label: "Tự động chuyển máy" }]} />
@@ -129,7 +129,7 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
         <Divider style={{ margin: "4px 0 16px" }} />
         <Form.Item name="assetIds" label={`Video phát (đã chọn ${assetIds.length})`} rules={[{ required: true, type: "array", min: 1, message: "Chọn ít nhất 1 video" }]}
           extra={machineId && !ready.length ? "Máy này chưa có video nào sẵn sàng — hãy thêm hoặc sao chép video sang máy này ở tab Kho video." : "Chọn nhiều video để tạo danh sách phát nối tiếp, lặp vòng."}>
-          {!machineId ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chọn máy phát trước." /> : (
+          {!machineId ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chọn VPS trước." /> : (
             <Checkbox.Group style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 240, overflow: "auto", padding: 8, border: "1px solid rgba(127,127,127,.25)", borderRadius: 8 }}
               options={ready.map((a) => ({
                 value: a.id,

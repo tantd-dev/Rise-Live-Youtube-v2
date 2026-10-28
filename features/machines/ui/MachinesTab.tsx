@@ -47,16 +47,16 @@ export function MachinesTab() {
 
   const toggleOffline = async (m: MachineView) => {
     if (!m.forceOffline && !(await confirm({ title: `Ngắt máy “${m.name}”?`, content: "Tất cả live đang phát trên máy này sẽ DỪNG. Các live có bật dự phòng sẽ được chuyển sang máy khác.", okText: "Ngắt máy", danger: true }))) return;
-    void patch(m, { forceOffline: !m.forceOffline }, m.forceOffline ? "Đã bật lại máy phát." : "Đã ngắt máy phát.");
+    void patch(m, { forceOffline: !m.forceOffline }, m.forceOffline ? "Đã bật lại VPS." : "Đã ngắt VPS.");
   };
   const remove = async (m: MachineView) => {
     if (await confirm({ title: `Xóa máy “${m.name}”?`, content: "Các video trên máy này cũng sẽ bị xóa khỏi kho.", okText: "Xóa", danger: true }))
-      void run(() => api(`/api/machines/${m.id}`, { method: "DELETE" }), "Đã xóa máy phát.");
+      void run(() => api(`/api/machines/${m.id}`, { method: "DELETE" }), "Đã xóa VPS.");
   };
 
   const columns: ProColumns<MachineView>[] = [
     {
-      title: "Máy phát", dataIndex: "name", width: 260, render: (_, m) => (
+      title: "VPS", dataIndex: "name", width: 260, render: (_, m) => (
         <Space direction="vertical" size={0}>
           <Space size={6}><Text strong>{m.name}</Text><Text type="secondary">· {MACHINE_ROLE_LABEL[m.role] ?? m.role}</Text></Space>
           <Text style={small}><Text code style={small}>{m.ip}</Text>{[m.provider, m.region].filter(Boolean).length ? ` · ${[m.provider, m.region].filter(Boolean).join(" · ")}` : ""}</Text>
@@ -132,15 +132,15 @@ export function MachinesTab() {
     <>
       <ProTable<MachineView>
         rowKey="id"
-        headerTitle={`Danh sách máy phát (${machines.length})`}
+        headerTitle={`Danh sách VPS (${machines.length})`}
         dataSource={machines}
         columns={columns}
         search={false}
         options={false}
         scroll={{ x: 1100 }}
         pagination={false}
-        locale={{ emptyText: "Chưa có máy phát nào. Hãy thêm máy rồi bấm “Cài worker” để lấy lệnh cài lên VPS." }}
-        toolBarRender={() => (admin ? [<Button key="add" type="primary" icon={<Plus size={14} />} onClick={() => setForm({})}>Thêm máy phát</Button>] : [])}
+        locale={{ emptyText: "Chưa có VPS nào. Hãy thêm máy rồi bấm “Cài worker” để lấy lệnh cài lên VPS." }}
+        toolBarRender={() => (admin ? [<Button key="add" type="primary" icon={<Plus size={14} />} onClick={() => setForm({})}>Thêm VPS</Button>] : [])}
       />
       {form && <MachineForm machine={form.machine} onClose={() => setForm(null)} onCreated={(id) => { const m = data?.machines.find((x) => x.id === id); setInstall(m ?? ({ id, name: "máy mới" } as MachineView)); }} />}
       {install && <InstallDialog machine={install} onClose={() => setInstall(null)} />}

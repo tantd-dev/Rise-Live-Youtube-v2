@@ -100,7 +100,7 @@ export async function runAutoFailover(): Promise<{ moved: number; skipped?: stri
       movePrevAssetIds: streamAssetIds(s), moveExecId: exec.id, moveDeadlineAt: deadline(), updatedAt: nowISO(),
     }, { merge: true });
     await logIncident({
-      streamId: s.id, streamName: s.name, machineId: s.machineId, streamOwner: s.createdBy ?? "", cause: "Máy phát gặp sự cố — tự động chuyển máy",
+      streamId: s.id, streamName: s.name, machineId: s.machineId, streamOwner: s.createdBy ?? "", cause: "VPS gặp sự cố — tự động chuyển máy",
       reason: `chuyển sang ${cand.name}`, startedAt: byId.get(s.machineId)?.lastHeartbeatAt ?? nowISO(), resolution: "failover", resolvedBy: "system",
     });
     planned.push({ ...s, machineId: cand.machineId });
