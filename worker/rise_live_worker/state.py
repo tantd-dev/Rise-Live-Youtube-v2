@@ -1,4 +1,4 @@
-# Trạng thái dùng chung giữa các luồng xử lý (thread) của worker.
+# Trạng thái dùng chung giữa các live xử lý (thread) của worker.
 import threading
 import time
 
@@ -13,7 +13,7 @@ pending_uploads = []                 # video tải thẳng lên, chờ máy ch�
 
 # streamId -> bản ghi tiến trình ffmpeg (xem streams.ensure_stream)
 stream_procs = {}
-desired_live = {}                    # streamId -> dict luồng ĐANG PHẢI phát
+desired_live = {}                    # streamId -> dict live ĐANG PHẢI phát
 recently_stopped = set()             # vừa dừng → báo "stopped" 1 lần cho máy chủ
 incidents = []                       # sự cố tự phục hồi chưa gửi
 
@@ -28,7 +28,7 @@ last_reason = {}                     # sid -> lý do rớt gần nhất
 
 wake_event = threading.Event()       # ffmpeg vừa chết → đánh thức giám sát ngay
 
-# Tự dừng khi cô lập (lease): mất liên lạc máy chủ quá grace giây → dừng luồng có leaseEnabled.
+# Tự dừng khi cô lập (lease): mất liên lạc máy chủ quá grace giây → dừng live có leaseEnabled.
 lease = {"last_ok": time.time(), "grace": 60, "enabled": {}, "fenced": set()}
 
 thumb = {"push": config.THUMB_PUSH_DEFAULT}

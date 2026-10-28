@@ -1,4 +1,4 @@
-// Nhật ký sự cố CỐ ĐỊNH (giữ cả sau khi luồng dừng/xóa) + sự cố tự phục hồi worker báo về.
+// Nhật ký sự cố CỐ ĐỊNH (giữ cả sau khi live dừng/xóa) + sự cố tự phục hồi worker báo về.
 export interface IncidentLog {
   id: string;
   streamId: string;

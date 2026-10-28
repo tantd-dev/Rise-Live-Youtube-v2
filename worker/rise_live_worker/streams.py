@@ -1,4 +1,4 @@
-# Chạy / dừng / giám sát tiến trình ffmpeg của từng luồng (copy-codec, không nén lại → gần như không tốn CPU).
+# Chạy / dừng / giám sát tiến trình ffmpeg của từng live (copy-codec, không nén lại → gần như không tốn CPU).
 #  · ffmpeg chết → giám sát bật lại NGAY (đọc tiến độ thấy ống đóng là đánh thức), ghi sự cố kèm số giây mất sóng.
 #  · Treo (đồng hồ ffmpeg đứng yên) → giết để bật lại.
 #  · Chớp tắt liên tục → tạm ngừng theo bậc thang chờ, rồi tự thử lại (lỗi mạng/VPS tự lành).
@@ -54,7 +54,7 @@ def _forget_breaker(sid):
 
 
 def _ready_items(s):
-    """(đường dẫn, thời lượng) các video ĐÃ sẵn sàng của luồng, đúng thứ tự."""
+    """(đường dẫn, thời lượng) các video ĐÃ sẵn sàng của live, đúng thứ tự."""
     ids = s.get("assetIds") or ([s.get("assetId")] if s.get("assetId") else [])
     items = []
     for aid in ids:
@@ -79,7 +79,7 @@ def _halt_if_flapping(sid, now):
 
 
 def ensure_stream(s):
-    """Bảo đảm luồng đang chạy (gọi từ reconcile và giám sát)."""
+    """Bảo đảm live đang chạy (gọi từ reconcile và giám sát)."""
     sid = s["id"]
     items = _ready_items(s)
     if not items:
@@ -214,14 +214,14 @@ def stop_stream(sid):
 
 
 def supervisor_loop():
-    """Mỗi ≤2 giây (hoặc ngay khi ffmpeg chết): bật lại luồng chết, giết luồng treo, ghi sự cố, tự dừng khi cô lập."""
+    """Mỗi ≤2 giây (hoặc ngay khi ffmpeg chết): bật lại live chết, giết live treo, ghi sự cố, tự dừng khi cô lập."""
     while True:
         try:
             isolated = time.time() - state.lease["last_ok"]
             if isolated > state.lease["grace"]:
                 for sid in list(state.desired_live.keys()):
                     if not state.lease["enabled"].get(sid):
-                        continue   # luồng thường: giữ phát dù mất liên lạc máy chủ
+                        continue   # live thường: giữ phát dù mất liên lạc máy chủ
                     if sid not in state.lease["fenced"]:
                         print("TU DUNG luong %s: mat lien lac may chu %ds -> tranh phat trung" % (sid, int(isolated)))
                         state.lease["fenced"].add(sid)
@@ -258,7 +258,7 @@ def supervisor_loop():
 
 
 def report():
-    """Trạng thái từng luồng gửi về máy chủ."""
+    """Trạng thái từng live gửi về máy chủ."""
     out = []
     now = time.time()
     for sid, v in list(state.stream_procs.items()):

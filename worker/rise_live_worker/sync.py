@@ -70,7 +70,7 @@ def reconcile(desired):
     except Exception:
         pass
 
-    # 3) Luồng: bật cái cần phát, dừng cái còn lại; luồng đã bị xoá → dừng + quên.
+    # 3) live: bật cái cần phát, dừng cái còn lại; live đã bị xoá → dừng + quên.
     present, live_ids = set(), set()
     for s in desired.get("streams", []):
         present.add(s["id"])

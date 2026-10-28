@@ -71,7 +71,7 @@ export interface Stream {
   updatedAt?: string;
 }
 
-/** Luồng gửi ra giao diện: che khóa luồng, thêm trường suy ra. */
+/** live gửi ra giao diện: che khóa live, thêm trường suy ra. */
 export interface StreamView extends Omit<Stream, "streamKey"> {
   streamKeyMasked: string;
   scheduleActive: boolean;

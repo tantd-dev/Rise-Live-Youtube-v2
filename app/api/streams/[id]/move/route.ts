@@ -1,4 +1,4 @@
-// Chuyển luồng đang phát sang máy khác (bàn giao an toàn 2 pha).
+// Chuyển live đang phát sang máy khác (bàn giao an toàn 2 pha).
 import { json, readBody, route } from "@/lib/server/http";
 import { requireUser } from "@/features/users/server/session";
 import { previewMove, startMove } from "@/features/failover/server/service";

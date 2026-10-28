@@ -78,13 +78,13 @@ export async function renameAsset(id: string, name: string, by: string) {
   await audit(by, "asset.rename", id, n);
 }
 
-/** Xóa video (worker tự dọn file trên VPS ở nhịp sau). Chặn nếu còn luồng dùng. */
+/** Xóa video (worker tự dọn file trên VPS ở nhịp sau). Chặn nếu còn live dùng. */
 export async function deleteAsset(id: string, by: string) {
   const [single, inList] = await Promise.all([
     db.collection(COL.streams).where("assetId", "==", id).limit(1).get(),
     db.collection(COL.streams).where("assetIds", "array-contains", id).limit(1).get(),
   ]);
-  if (!single.empty || !inList.empty) throw bad("Video đang được một luồng dùng — xóa hoặc sửa luồng trước.");
+  if (!single.empty || !inList.empty) throw bad("Video đang được một live dùng — xóa hoặc sửa live trước.");
   await db.collection(COL.assets).doc(id).delete();
   await audit(by, "asset.delete", id);
 }

@@ -55,10 +55,10 @@ export async function updateMachine(id: string, b: MachineInput, by: string): Pr
   await audit(by, "machine.update", id, JSON.stringify(patch).slice(0, 200));
 }
 
-/** Xóa máy: chỉ khi không còn luồng gắn vào; dọn luôn bản ghi video của máy (file mất theo máy). */
+/** Xóa máy: chỉ khi không còn live gắn vào; dọn luôn bản ghi video của máy (file mất theo máy). */
 export async function deleteMachine(id: string, by: string): Promise<number> {
   const onMachine = await db.collection(COL.streams).where("machineId", "==", id).limit(1).get();
-  if (!onMachine.empty) throw bad("Máy còn luồng gắn vào — xóa hoặc chuyển luồng trước.");
+  if (!onMachine.empty) throw bad("Máy còn live gắn vào — xóa hoặc chuyển live trước.");
   const [aSnap, sSnap] = await Promise.all([
     db.collection(COL.assets).where("machineId", "==", id).limit(500).get(),
     db.collection(COL.streams).limit(5000).get(),
@@ -66,7 +66,7 @@ export async function deleteMachine(id: string, by: string): Promise<number> {
   const used = new Set<string>();
   sSnap.docs.forEach((d) => streamAssetIds(d.data() as never).forEach((x) => used.add(x)));
   const inUse = aSnap.docs.filter((d) => used.has(d.id)).length;
-  if (inUse) throw bad(`Máy còn ${inUse} video đang được luồng khác dùng — gỡ khỏi luồng trước.`);
+  if (inUse) throw bad(`Máy còn ${inUse} video đang được live khác dùng — gỡ khỏi live trước.`);
   const batch = db.batch();
   aSnap.docs.forEach((d) => batch.delete(d.ref));
   batch.delete(db.collection(COL.machines).doc(id));

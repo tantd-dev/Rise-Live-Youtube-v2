@@ -16,8 +16,8 @@ export interface Machine {
   uploadMbps?: number;           // băng thông đẩy (worker tự đo, hoặc đặt tay)
   uploadMbpsManual?: boolean;    // true = đặt tay, worker không ghi đè
   uploadHttpsUrl?: string;       // địa chỉ HTTPS nhận file tải thẳng (Caddy → cổng 8099)
-  maintenance?: boolean;         // bảo trì: không gán luồng MỚI
-  forceOffline?: boolean;        // ngắt máy: worker dừng hết luồng
+  maintenance?: boolean;         // bảo trì: không gán live MỚI
+  forceOffline?: boolean;        // ngắt máy: worker dừng hết live
   costAmount?: number | null;
   costPeriod?: "month" | "year";
   costRenewAt?: string | null;   // YYYY-MM-DD — nhắc gia hạn

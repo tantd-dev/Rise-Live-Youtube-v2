@@ -91,7 +91,7 @@ export function AssetsTab() {
             <Tooltip title="Đổi tên"><Button type="text" size="small" icon={<Pencil size={15} />} disabled={busy} onClick={() => rename(a)} /></Tooltip>
             <Popconfirm title={`Xóa video “${a.name}”?`} description="File trên máy phát cũng sẽ bị xóa." okText="Xóa" cancelText="Hủy" okButtonProps={{ danger: true }}
               disabled={users.length > 0} onConfirm={() => run(() => api(`/api/assets/${a.id}`, { method: "DELETE" }), "Đã xóa video.")}>
-              <Tooltip title={users.length ? "Video đang được luồng phát sử dụng" : "Xóa"}>
+              <Tooltip title={users.length ? "Video đang được Phiên live sử dụng" : "Xóa"}>
                 <Button type="text" size="small" danger icon={<Trash size={15} />} disabled={busy || users.length > 0} />
               </Tooltip>
             </Popconfirm>

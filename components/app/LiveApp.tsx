@@ -16,7 +16,7 @@ import { ROLE_LABEL, type Permission } from "@/features/users/types";
 
 const TABS: { id: string; label: string; icon: ReactNode; perm: Permission }[] = [
   { id: "overview", label: "Tổng quan", icon: <LayoutDashboard size={16} />, perm: "view" },
-  { id: "streams", label: "Luồng phát", icon: <Radio size={16} />, perm: "view" },
+  { id: "streams", label: "Phiên live", icon: <Radio size={16} />, perm: "view" },
   { id: "assets", label: "Kho video", icon: <Film size={16} />, perm: "view" },
   { id: "machines", label: "Máy phát", icon: <Server size={16} />, perm: "view" },
   { id: "incidents", label: "Nhật ký sự cố", icon: <ScrollText size={16} />, perm: "view" },

@@ -1,8 +1,8 @@
 // Xử lý 1 nhịp hỏi/đáp của worker:
-//   1. ghi nhịp tim + cấu hình máy   2. ghi trạng thái video/luồng worker báo
+//   1. ghi nhịp tim + cấu hình máy   2. ghi trạng thái video/live worker báo
 //   3. ghi sự cố tự phục hồi + đăng ký video tải thẳng   4. đẩy tiến trình chuyển máy
-//   5. trả DANH SÁCH MONG MUỐN (video cần có, luồng cần phát) cho đúng máy đó.
-// Dùng update() (không set-merge) cho video/luồng: bản ghi vừa bị xóa thì báo trễ không tạo lại "bản ma".
+//   5. trả DANH SÁCH MONG MUỐN (video cần có, live cần phát) cho đúng máy đó.
+// Dùng update() (không set-merge) cho video/live: bản ghi vừa bị xóa thì báo trễ không tạo lại "bản ma".
 import { db, COL, nowISO } from "@/lib/server/firestore";
 import { HttpError } from "@/lib/server/http";
 import { env } from "@/lib/server/env";
@@ -46,7 +46,7 @@ export async function handleAgentSync(body: AgentRequest, token: string): Promis
   if (hb.gdownOk != null) mPatch.gdownOk = !!hb.gdownOk;
   if (hb.toolError != null) mPatch.toolError = String(hb.toolError).slice(0, 300);
 
-  // Đọc video + luồng của máy MỘT lần cho cả nhịp.
+  // Đọc video + live của máy MỘT lần cho cả nhịp.
   const [aSnap, sSnap] = await Promise.all([
     db.collection(COL.assets).where("machineId", "==", machineId).limit(1000).get(),
     db.collection(COL.streams).where("machineId", "==", machineId).limit(1000).get(),
@@ -60,7 +60,7 @@ export async function handleAgentSync(body: AgentRequest, token: string): Promis
   checkMissingAssets(body, assets, justUploaded, machine, mPatch);
   await mRef.set(mPatch, { merge: true });
 
-  // 4) Chuyển máy: luồng vừa cutover khỏi máy này thì thôi gửi xuống.
+  // 4) Chuyển máy: live vừa cutover khỏi máy này thì thôi gửi xuống.
   const reported: Record<string, string> = {};
   for (const r of body.streams ?? []) if (r?.id) reported[String(r.id)] = String(r.status ?? "");
   const movedAway = await advanceMoves(machineId, reported, [...streams.values()]);
@@ -117,7 +117,7 @@ async function applyAssetReports(body: AgentRequest, assets: Map<string, Asset>)
   }
 }
 
-// 2b) Luồng: trạng thái + mốc "live từ" + cờ tụt tốc độ / màn đen kéo dài + sự cố tự phục hồi.
+// 2b) live: trạng thái + mốc "live từ" + cờ tụt tốc độ / màn đen kéo dài + sự cố tự phục hồi.
 async function applyStreamReports(body: AgentRequest, streams: Map<string, Stream>, machineId: string) {
   const nowMs = Date.now();
   const incidents = new Map<string, StreamIncident[]>();
@@ -174,7 +174,7 @@ async function applyStreamReports(body: AgentRequest, streams: Map<string, Strea
     await db.collection(COL.streams).doc(id).update(up).catch(() => undefined);
     streams.set(id, { ...cur, ...up } as Stream);
   }
-  // Sự cố của luồng không có trong báo cáo trạng thái nhịp này.
+  // Sự cố của live không có trong báo cáo trạng thái nhịp này.
   for (const [sid, evs] of incidents) {
     const cur = streams.get(sid);
     if (!cur) continue;

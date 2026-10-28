@@ -1,4 +1,4 @@
-// Worker đẩy ảnh đang phát của 1 luồng lên (JPG base64).
+// Worker đẩy ảnh đang phát của 1 live lên (JPG base64).
 import { json, readBody, route } from "@/lib/server/http";
 import { saveThumb } from "@/features/thumbs/server/service";
 

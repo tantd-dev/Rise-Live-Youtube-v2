@@ -1,4 +1,4 @@
-// Ảnh đang phát của 1 luồng (cho giao diện). Cần đăng nhập.
+// Ảnh đang phát của 1 live (cho giao diện). Cần đăng nhập.
 import { route } from "@/lib/server/http";
 import { requireUser } from "@/features/users/server/session";
 import { loadThumb } from "@/features/thumbs/server/service";

@@ -103,7 +103,7 @@ def _prepare_run(asset):
     speed = mb_per_min(raw)
 
     # 3) Chuẩn hoá. "Giữ nguyên gốc" = chỉ copy hình + chuẩn audio AAC (gần như không tốn CPU).
-    #    Nén lại thì xếp hàng (MAX_ENCODE) và chạy ưu tiên thấp để không làm giật luồng đang phát.
+    #    Nén lại thì xếp hàng (MAX_ENCODE) và chạy ưu tiên thấp để không làm giật live đang phát.
     part = out + ".part"
     ab = int(preset.get("audioBitrateKbps", 256))
     nice = ["nice", "-n", "19"]

@@ -1,5 +1,5 @@
 "use client";
-// Form tạo / sửa luồng.
+// Form tạo / sửa live.
 import { useMemo } from "react";
 import { Checkbox, DatePicker, Divider, Empty, Form, Input, InputNumber, Modal, Select, Typography } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
@@ -51,21 +51,21 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
     };
     const r = await run(
       () => stream ? api(`/api/streams/${stream.id}`, { method: "PUT", body }) : api<{ warnings?: string[] }>("/api/streams", { body }),
-      (res) => [stream ? "Đã lưu luồng phát." : v.control === "manual" ? "Đã tạo luồng. Máy phát sẽ lên sóng sau vài giây." : "Đã tạo luồng hẹn giờ.", ...((res as { warnings?: string[] })?.warnings ?? [])].join(" "),
+      (res) => [stream ? "Đã lưu Phiên live." : v.control === "manual" ? "Đã tạo live. Máy phát sẽ lên sóng sau vài giây." : "Đã tạo live hẹn giờ.", ...((res as { warnings?: string[] })?.warnings ?? [])].join(" "),
     );
     if (r) onClose();
   };
 
   return (
-    <Modal open title={stream ? `Sửa luồng “${stream.name}”` : "Tạo luồng phát"} onCancel={onClose} width={900} destroyOnHidden
-      okText={stream ? "Lưu" : control === "manual" ? "Tạo và lên sóng" : "Tạo luồng hẹn giờ"} cancelText="Hủy" confirmLoading={busy} onOk={() => form.submit()}>
+    <Modal open title={stream ? `Sửa live “${stream.name}”` : "Tạo Phiên live"} onCancel={onClose} width={900} destroyOnHidden
+      okText={stream ? "Lưu" : control === "manual" ? "Tạo và lên sóng" : "Tạo live hẹn giờ"} cancelText="Hủy" confirmLoading={busy} onOk={() => form.submit()}>
       <Form form={form} layout="vertical" initialValues={initial(stream)} onFinish={submit}
         onValuesChange={(ch) => {
           if ("machineId" in ch) form.setFieldValue("assetIds", []);
           if (ch.importance && ch.importance !== "normal") form.setFieldValue("failoverMode", "automatic");
         }}>
         <div style={grid}>
-          <Form.Item name="name" label="Tên luồng" rules={[{ required: true, whitespace: true, message: "Nhập tên luồng" }]}>
+          <Form.Item name="name" label="Tên live" rules={[{ required: true, whitespace: true, message: "Nhập tên live" }]}>
             <Input placeholder="VD: Nhạc thiền 24/7 — kênh A" />
           </Form.Item>
           <Form.Item name="mode" label="Kiểu phát">
@@ -77,12 +77,12 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
           <Form.Item name="machineId" label="Máy phát" rules={[{ required: true, message: "Chọn máy phát" }]}>
             <Select placeholder="Chọn máy phát" options={machines.map((m) => ({
               value: m.id, disabled: m.maintenance,
-              label: `${m.name} · ${m.online ? "trực tuyến" : "ngoại tuyến"}${m.maintenance ? " · đang bảo trì" : ""} · ${m.liveCount} luồng`,
+              label: `${m.name} · ${m.online ? "trực tuyến" : "ngoại tuyến"}${m.maintenance ? " · đang bảo trì" : ""} · ${m.liveCount} live`,
             }))} />
           </Form.Item>
-          <Form.Item name="streamKey" label="Khóa luồng YouTube"
-            rules={[...(stream ? [] : [{ required: true, whitespace: true, message: "Dán khóa luồng từ YouTube Studio" }]), { validator: (_, v) => (v ? fromCheck(checkStreamKey(v)) : Promise.resolve()) }]}
-            extra={stream ? "Để trống nếu muốn giữ khóa luồng hiện tại." : "Lấy tại YouTube Studio › Phát trực tiếp › Khóa luồng. Địa chỉ RTMP đã được cấu hình sẵn."}>
+          <Form.Item name="streamKey" label="Khóa live YouTube"
+            rules={[...(stream ? [] : [{ required: true, whitespace: true, message: "Dán khóa live từ YouTube Studio" }]), { validator: (_, v) => (v ? fromCheck(checkStreamKey(v)) : Promise.resolve()) }]}
+            extra={stream ? "Để trống nếu muốn giữ khóa live hiện tại." : "Lấy tại YouTube Studio › Phát trực tiếp › Khóa live. Địa chỉ RTMP đã được cấu hình sẵn."}>
             <Input.Password placeholder={stream ? stream.streamKeyMasked : "xxxx-xxxx-xxxx-xxxx-xxxx"} autoComplete="off" visibilityToggle />
           </Form.Item>
           <Form.Item name="watchUrl" label="Link xem buổi live trên YouTube"
@@ -90,7 +90,7 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
             extra="Chỉ cần dán MÃ buổi live — hệ thống tự đổi thành https://www.youtube.com/watch?v=<mã>.">
             <WatchUrlInput />
           </Form.Item>
-          <Form.Item name="control" label="Cách bật luồng">
+          <Form.Item name="control" label="Cách bật live">
             <Select options={[{ value: "manual", label: "Thủ công (lên sóng ngay sau khi tạo)" }, { value: "schedule", label: "Hẹn giờ" }]} />
           </Form.Item>
           {control === "schedule" && (
@@ -120,7 +120,7 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
             ]} />
           </Form.Item>
           <Form.Item name="failoverMode" label="Dự phòng khi máy phát gặp sự cố"
-            extra={importance !== "normal" ? "Luồng ưu tiên/quan trọng luôn được tự động chuyển máy." : undefined}>
+            extra={importance !== "normal" ? "live ưu tiên/quan trọng luôn được tự động chuyển máy." : undefined}>
             <Select disabled={importance !== "normal"}
               options={[{ value: "disabled", label: "Không dự phòng" }, { value: "manual", label: "Chuyển máy thủ công" }, { value: "automatic", label: "Tự động chuyển máy" }]} />
           </Form.Item>

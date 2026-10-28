@@ -1,4 +1,4 @@
-// Kiểm ngay trạng thái YouTube của các luồng (nút "Kiểm YouTube").
+// Kiểm ngay trạng thái YouTube của các live (nút "Kiểm YouTube").
 import { json, readBody, route } from "@/lib/server/http";
 import { requireUser } from "@/features/users/server/session";
 import { checkYoutube } from "@/features/youtube/server/check";

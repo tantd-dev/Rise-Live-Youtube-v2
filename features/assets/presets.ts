@@ -29,7 +29,7 @@ export const findPreset = (id: string | undefined | null) => PRESETS.find((p) =>
 export const SAFETY_FACTOR = 0.7;
 const RTMP_OVERHEAD = 1.05;
 
-/** Băng thông 1 luồng cần (Mbps), gồm hao phí RTMP. */
+/** Băng thông 1 live cần (Mbps), gồm hao phí RTMP. */
 export function streamMbps(p: QualityPreset | null): number {
   if (!p) return 0;
   return Math.round(((p.videoBitrateKbps + p.audioBitrateKbps) / 1000) * RTMP_OVERHEAD * 100) / 100;

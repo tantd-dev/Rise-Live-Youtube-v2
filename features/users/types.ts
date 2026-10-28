@@ -10,13 +10,13 @@ export const ROLE_LABEL: Record<Role, string> = {
 /** Mô tả quyền của từng vai trò (hiện cạnh ô chọn vai trò). */
 export const ROLE_HINT: Record<Role, string> = {
   admin: "Toàn quyền: máy phát, người dùng, cài đặt hệ thống",
-  operator: "Quản lý luồng phát và kho video",
+  operator: "Quản lý Phiên live và kho video",
   viewer: "Chỉ xem, không thao tác",
 };
 
 export type Permission =
   | "view"
-  | "streams.operate"   // tạo/sửa/bật/dừng/xóa luồng
+  | "streams.operate"   // tạo/sửa/bật/dừng/xóa live
   | "assets.manage"     // thêm/sao chép/xóa video
   | "machines.manage"   // thêm/sửa/xóa máy, xem lệnh cài worker
   | "users.manage"      // gán vai trò

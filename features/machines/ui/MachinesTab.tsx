@@ -46,7 +46,7 @@ export function MachinesTab() {
   const patch = (m: MachineView, body: Record<string, unknown>, ok: string) => run(() => api(`/api/machines/${m.id}`, { method: "PATCH", body }), ok);
 
   const toggleOffline = async (m: MachineView) => {
-    if (!m.forceOffline && !(await confirm({ title: `Ngắt máy “${m.name}”?`, content: "Tất cả luồng đang phát trên máy này sẽ DỪNG. Các luồng có bật dự phòng sẽ được chuyển sang máy khác.", okText: "Ngắt máy", danger: true }))) return;
+    if (!m.forceOffline && !(await confirm({ title: `Ngắt máy “${m.name}”?`, content: "Tất cả live đang phát trên máy này sẽ DỪNG. Các live có bật dự phòng sẽ được chuyển sang máy khác.", okText: "Ngắt máy", danger: true }))) return;
     void patch(m, { forceOffline: !m.forceOffline }, m.forceOffline ? "Đã bật lại máy phát." : "Đã ngắt máy phát.");
   };
   const remove = async (m: MachineView) => {
@@ -84,7 +84,7 @@ export function MachinesTab() {
       ),
     },
     { title: "Băng thông", key: "bw", render: (_, m) => <Bandwidth m={m} /> },
-    { title: "Số luồng", dataIndex: "liveCount", width: 90, align: "center" },
+    { title: "Số live", dataIndex: "liveCount", width: 90, align: "center" },
     {
       title: "Chi phí thuê", key: "cost", render: (_, m) => {
         const days = daysToRenew(m);
@@ -107,8 +107,10 @@ export function MachinesTab() {
           <Dropdown trigger={["click"]} disabled={busy} menu={{
             items: [
               { key: "edit", icon: <Pencil size={14} />, label: "Sửa thông tin" },
-              { key: "maint", icon: <Wrench size={14} />, label: m.maintenance ? "Tắt chế độ bảo trì" : "Bật chế độ bảo trì",
-                title: "Bảo trì: không nhận luồng MỚI; các luồng đang phát không bị ảnh hưởng." },
+              {
+                key: "maint", icon: <Wrench size={14} />, label: m.maintenance ? "Tắt chế độ bảo trì" : "Bật chế độ bảo trì",
+                title: "Bảo trì: không nhận live MỚI; các live đang phát không bị ảnh hưởng."
+              },
               { key: "offline", icon: m.forceOffline ? <Play size={14} /> : <Power size={14} />, label: m.forceOffline ? "Bật lại máy" : "Ngắt máy", danger: !m.forceOffline },
               ...(m.liveCount === 0 ? [{ type: "divider" as const }, { key: "delete", icon: <Trash size={14} />, label: "Xóa máy", danger: true }] : []),
             ],

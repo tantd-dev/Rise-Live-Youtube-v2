@@ -1,4 +1,4 @@
-# Khởi động worker: các luồng nền (giám sát, ảnh, máy chủ nhận file, cập nhật công cụ, đo băng thông)
+# Khởi động worker: các live nền (giám sát, ảnh, máy chủ nhận file, cập nhật công cụ, đo băng thông)
 # + vòng hỏi máy chủ chính.
 import os
 import sys

@@ -34,12 +34,12 @@ export function StreamsTab() {
   return (
     <>
       <ProCard
-        title={`Danh sách luồng (${streams.length})`}
+        title={`Danh sách live (${streams.length})`}
         headerBordered
         extra={can("streams.operate") && (
           <Space wrap>
-            {data?.config.ytApiKey && <Button icon={<RefreshCw size={14} />} disabled={busy} onClick={() => run(() => api<{ checked: number }>("/api/youtube/check", { body: {} }), (r) => `Đã kiểm tra ${r.checked} luồng trên YouTube.`)}>Kiểm tra YouTube</Button>}
-            <Button type="primary" icon={<Plus size={14} />} onClick={() => setForm({})}>Tạo luồng</Button>
+            {data?.config.ytApiKey && <Button icon={<RefreshCw size={14} />} disabled={busy} onClick={() => run(() => api<{ checked: number }>("/api/youtube/check", { body: {} }), (r) => `Đã kiểm tra ${r.checked} live trên YouTube.`)}>Kiểm tra YouTube</Button>}
+            <Button type="primary" icon={<Plus size={14} />} onClick={() => setForm({})}>Tạo live</Button>
           </Space>
         )}
       >
@@ -48,10 +48,10 @@ export function StreamsTab() {
             <Segmented value={filter} onChange={(v) => setFilter(String(v))}
               options={FILTERS.map((f) => ({ value: f.id, label: `${f.label} (${streams.filter(f.test).length})` }))} />
           </div>
-          <Input allowClear prefix={<Search size={14} />} placeholder="Tìm theo tên luồng…" value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 260, maxWidth: "100%" }} />
+          <Input allowClear prefix={<Search size={14} />} placeholder="Tìm theo tên live…" value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 260, maxWidth: "100%" }} />
         </div>
         {!shown.length
-          ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={streams.length ? "Không có luồng nào khớp bộ lọc." : "Chưa có luồng nào. Cần có: 1 máy phát trực tuyến, 1 video sẵn sàng trên máy đó và khóa luồng YouTube."} />
+          ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={streams.length ? "Không có live nào khớp bộ lọc." : "Chưa có live nào. Cần có: 1 máy phát trực tuyến, 1 video sẵn sàng trên máy đó và khóa live YouTube."} />
           : <Space direction="vertical" size={12} style={{ width: "100%" }}>{shown.map((s) => <StreamCard key={s.id} s={s} onEdit={() => setForm({ stream: s })} onMove={() => setMoving(s)} />)}</Space>}
       </ProCard>
       {form && <StreamForm stream={form.stream} onClose={() => setForm(null)} />}

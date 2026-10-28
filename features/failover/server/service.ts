@@ -21,7 +21,7 @@ const CLEAR_MOVE = {
 };
 const deadline = () => new Date(Date.now() + MOVE_TIMEOUT_SEC * 1000).toISOString();
 
-// ── Công tắc TẮT KHẨN tự cứu (chỉ dừng phần TỰ chuyển; luồng vẫn phát, cảnh báo vẫn chạy) ──
+// ── Công tắc TẮT KHẨN tự cứu (chỉ dừng phần TỰ chuyển; live vẫn phát, cảnh báo vẫn chạy) ──
 export async function getSwitch(): Promise<FailoverSwitch> {
   if (env.failoverOffEnv()) return { disabled: true, envOff: true, reason: "RISE_LIVE_FAILOVER_OFF=1" };
   const d = (await db.collection(COL.settings).doc("failover").get()).data();
@@ -32,7 +32,7 @@ export async function setSwitch(off: boolean, reason: string, user: SessionUser)
   if (off && !reason.trim()) throw bad("Cho biết lý do tắt (để người sau hiểu vì sao).");
   await db.collection(COL.settings).doc("failover").set(
     off ? { disabled: true, disabledBy: user.email, disabledAt: nowISO(), reason: reason.trim().slice(0, 300) }
-        : { disabled: false, enabledBy: user.email, enabledAt: nowISO(), reason: "" }, { merge: true });
+      : { disabled: false, enabledBy: user.email, enabledAt: nowISO(), reason: "" }, { merge: true });
   await audit(user.email, off ? "failover.off" : "failover.on", "failover", reason);
 }
 
@@ -41,7 +41,7 @@ export async function previewMove(streamId: string) {
   const [stream, machines, streams, assets] = await Promise.all([
     readOne<Stream>(COL.streams, streamId), readAll<Machine>(COL.machines, 500), readAll<Stream>(COL.streams, 5000), readAll<Asset>(COL.assets, 8000),
   ]);
-  if (!stream) throw notFound("Luồng không tồn tại.");
+  if (!stream) throw notFound("live không tồn tại.");
   return moveCandidates(stream, machines, streams, assets);
 }
 
@@ -49,9 +49,9 @@ export async function startMove(streamId: string, targetId: string, user: Sessio
   const [stream, machines, streams, assets] = await Promise.all([
     readOne<Stream>(COL.streams, streamId), readAll<Machine>(COL.machines, 500), readAll<Stream>(COL.streams, 5000), readAll<Asset>(COL.assets, 8000),
   ]);
-  if (!stream) throw notFound("Luồng không tồn tại.");
-  if (stream.moveState) throw bad("Luồng đang trong một lần chuyển khác.");
-  if (!shouldBeLive(stream)) throw bad("Chỉ chuyển được luồng ĐANG phát. Với luồng đã dừng, hãy bấm “Sửa” để đổi máy.");
+  if (!stream) throw notFound("live không tồn tại.");
+  if (stream.moveState) throw bad("live đang trong một lần chuyển khác.");
+  if (!shouldBeLive(stream)) throw bad("Chỉ chuyển được live ĐANG phát. Với live đã dừng, hãy bấm “Sửa” để đổi máy.");
   const cand = moveCandidates(stream, machines, streams, assets).find((c) => c.machineId === targetId);
   if (!cand) throw bad("Máy đích không hợp lệ.");
   if (!cand.ok) throw bad(`Không chuyển được sang "${cand.name}": ${cand.reasons.join(", ")}.${cand.hasVideo ? "" : " Hãy sao chép video sang máy đó trước (Kho video → Sao chép sang máy khác)."}`);
@@ -68,7 +68,7 @@ export async function startMove(streamId: string, targetId: string, user: Sessio
   await audit(user.email, "stream.move", streamId, `→ ${cand.name}`);
 }
 
-// ── Tự cứu: máy chết → chuyển luồng được bảo vệ sang máy khác (bỏ pha dừng nguồn vì nguồn đã chết) ──
+// ── Tự cứu: máy chết → chuyển live được bảo vệ sang máy khác (bỏ pha dừng nguồn vì nguồn đã chết) ──
 export async function runAutoFailover(): Promise<{ moved: number; skipped?: string }> {
   if (!env.autoFailover()) return { moved: 0, skipped: "RISE_LIVE_AUTOFAILOVER chưa bật" };
   const sw = await getSwitch();
@@ -110,7 +110,7 @@ export async function runAutoFailover(): Promise<{ moved: number; skipped?: stri
 }
 
 // ── Tiến trình bàn giao — gọi trên MỖI nhịp worker (máy nguồn lẫn máy đích) ──
-/** Trả về id các luồng vừa CUTOVER khỏi máy này (không gửi xuống máy này nữa). */
+/** Trả về id các live vừa CUTOVER khỏi máy này (không gửi xuống máy này nữa). */
 export async function advanceMoves(machineId: string, reported: Record<string, string>, streams: Stream[]): Promise<Set<string>> {
   const movedAway = new Set<string>();
   const nowMs = Date.now();

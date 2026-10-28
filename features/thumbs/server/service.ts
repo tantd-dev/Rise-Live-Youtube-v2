@@ -1,4 +1,4 @@
-// Ảnh "đang phát" của từng luồng: worker đẩy JPG (base64) lên, giao diện tải về xem.
+// Ảnh "đang phát" của từng live: worker đẩy JPG (base64) lên, giao diện tải về xem.
 import { db, COL, nowISO } from "@/lib/server/firestore";
 import { HttpError } from "@/lib/server/http";
 import { verifyWorkerToken } from "@/features/machines/server/worker-token";

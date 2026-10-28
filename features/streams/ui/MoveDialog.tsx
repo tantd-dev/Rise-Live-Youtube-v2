@@ -1,5 +1,5 @@
 "use client";
-// Chuyển luồng đang phát sang máy khác — chỉ chọn được máy đã có sẵn video.
+// Chuyển live đang phát sang máy khác — chỉ chọn được máy đã có sẵn video.
 import { useEffect, useState } from "react";
 import { Alert, Button, Modal, Table, Typography } from "antd";
 import { ArrowLeftRight } from "lucide-react";
@@ -17,8 +17,8 @@ export function MoveDialog({ stream, onClose }: { stream: StreamView; onClose: (
     api<{ candidates: MoveCandidate[] }>(`/api/streams/${stream.id}/move`).then((r) => setCands(r.candidates)).catch((e) => setErr(e.message));
   }, [stream.id]);
   const move = async (c: MoveCandidate) => {
-    if (!(await confirm({ title: `Chuyển “${stream.name}” sang “${c.name}”?`, content: "Máy cũ sẽ dừng trước, sau đó máy mới mới bắt đầu phát — luồng sẽ mất sóng vài giây.", okText: "Chuyển máy" }))) return;
-    if (await run(() => api(`/api/streams/${stream.id}/move`, { body: { targetId: c.machineId } }), "Đang chuyển máy. Theo dõi trạng thái ở thẻ luồng.")) onClose();
+    if (!(await confirm({ title: `Chuyển “${stream.name}” sang “${c.name}”?`, content: "Máy cũ sẽ dừng trước, sau đó máy mới mới bắt đầu phát — live sẽ mất sóng vài giây.", okText: "Chuyển máy" }))) return;
+    if (await run(() => api(`/api/streams/${stream.id}/move`, { body: { targetId: c.machineId } }), "Đang chuyển máy. Theo dõi trạng thái ở thẻ live.")) onClose();
   };
   return (
     <Modal open title={`Chuyển máy phát: ${stream.name}`} onCancel={onClose} footer={null} width={640} destroyOnHidden>
@@ -38,7 +38,7 @@ export function MoveDialog({ stream, onClose }: { stream: StreamView; onClose: (
         ]}
       />
       <Typography.Paragraph type="secondary" style={{ marginTop: 12, marginBottom: 0 }}>
-        Máy đích phải có sẵn video của luồng (vào Kho video → Sao chép sang máy khác).
+        Máy đích phải có sẵn video của live (vào Kho video → Sao chép sang máy khác).
       </Typography.Paragraph>
     </Modal>
   );

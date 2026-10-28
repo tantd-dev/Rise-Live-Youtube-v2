@@ -27,7 +27,7 @@ export function IncidentsTab() {
 
   const columns: ProColumns<IncidentRow>[] = [
     { title: "Thời điểm", dataIndex: "at", width: 170, render: (_, r) => fmtTime(r.at) },
-    { title: "Luồng phát", dataIndex: "streamName" },
+    { title: "Phiên live", dataIndex: "streamName" },
     { title: "Máy phát", dataIndex: "machineId", render: (_, r) => mName(r.machineId) },
     { title: "Loại sự cố", dataIndex: "kind" },
     { title: "Chi tiết", dataIndex: "detail", render: (_, r) => <Typography.Text style={{ fontSize: 13 }}>{r.detail}</Typography.Text> },

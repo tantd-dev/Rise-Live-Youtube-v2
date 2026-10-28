@@ -13,14 +13,14 @@ export function isOnline(m: Pick<Machine, "lastHeartbeatAt" | "forceOffline">, n
 export const quietSec = (m: Pick<Machine, "lastHeartbeatAt">, nowMs = Date.now()) =>
   Math.max(0, Math.round((nowMs - (Date.parse(String(m.lastHeartbeatAt ?? "")) || nowMs)) / 1000));
 
-/** Lên sóng thêm 1 luồng có vượt 70% băng thông máy không? Trả câu lỗi hoặc null. Thiếu dữ kiện → cho qua. */
+/** Lên sóng thêm 1 live có vượt 70% băng thông máy không? Trả câu lỗi hoặc null. Thiếu dữ kiện → cho qua. */
 export function capacityBlock(m: Machine, preset: QualityPreset | null, liveCount: number): string | null {
   const up = Number(m.uploadMbps) || 0;
   const per = streamMbps(preset);
   if (up <= 0 || per <= 0 || preset?.keepOriginal) return null;
   const used = m.txMbps != null ? Number(m.txMbps) : liveCount * per;
   if (Math.floor((up * SAFETY_FACTOR - used) / per) > 0) return null;
-  return `Máy "${m.name}" đã đầy băng thông an toàn (~${up} Mbps, chừa 30% dự phòng). Chọn máy khác hoặc dừng bớt luồng.`;
+  return `Máy "${m.name}" đã đầy băng thông an toàn (~${up} Mbps, chừa 30% dự phòng). Chọn máy khác hoặc dừng bớt live.`;
 }
 
 /** Máy đầy băng thông / sắp hết ổ → không nhận video mới. Bản sao lưu chỉ bị chặn theo ổ cứng. */

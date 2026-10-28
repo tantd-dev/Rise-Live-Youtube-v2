@@ -1,4 +1,4 @@
-// Kiểm buổi live trên YouTube bằng API key (YouTube Data API v3, videos.list) từ link xem của luồng.
+// Kiểm buổi live trên YouTube bằng API key (YouTube Data API v3, videos.list) từ link xem của live.
 // Chỉ ĐỌC: có còn tồn tại, đang live / đã kết thúc, số người xem. Không điều khiển gì trên YouTube.
 import { db, COL, nowISO, readAll } from "@/lib/server/firestore";
 import { bad } from "@/lib/server/http";
@@ -26,7 +26,7 @@ async function fetchVideos(ids: string[], key: string): Promise<Map<string, YtVi
   return out;
 }
 
-/** Kiểm các luồng có link xem (mặc định: luồng đang đặt phát; `all` = mọi luồng). */
+/** Kiểm các live có link xem (mặc định: live đang đặt phát; `all` = mọi live). */
 export async function checkYoutube(opts: { streamIds?: string[]; all?: boolean } = {}): Promise<{ checked: number; skipped?: string }> {
   const key = env.ytApiKey();
   if (!key) {

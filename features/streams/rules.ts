@@ -1,15 +1,15 @@
-// Quy tắc về luồng. THUẦN.
+// Quy tắc về live. THUẦN.
 import { isWithinSchedule } from "./schedule";
 import type { Stream } from "./types";
 
-/** Luồng ĐÁNG LẼ đang phát: bật tay, hoặc hẹn giờ đang trong khung. */
+/** live ĐÁNG LẼ đang phát: bật tay, hoặc hẹn giờ đang trong khung. */
 export function shouldBeLive(s: Pick<Stream, "desiredState" | "control" | "schedule">, nowMs = Date.now()): boolean {
   return s.desiredState === "live" || (s.control === "schedule" && isWithinSchedule(s.schedule, nowMs));
 }
 
 export const isPriority = (s: Pick<Stream, "importance">) => s.importance === "priority" || s.importance === "critical";
 
-/** Luồng được TỰ CỨU (tự chuyển máy khi máy chết): automatic hoặc ưu tiên — trừ Live Pub. */
+/** live được TỰ CỨU (tự chuyển máy khi máy chết): automatic hoặc ưu tiên — trừ Live Pub. */
 export function isAutoProtected(s: Pick<Stream, "mode" | "importance" | "failoverMode">): boolean {
   if (s.mode === "live-pub") return false;
   return s.failoverMode === "automatic" || isPriority(s);
@@ -18,7 +18,7 @@ export function isAutoProtected(s: Pick<Stream, "mode" | "importance" | "failove
 export const streamAssetIds = (s: Pick<Stream, "assetIds" | "assetId">): string[] =>
   Array.isArray(s.assetIds) && s.assetIds.length ? s.assetIds.map(String) : s.assetId ? [String(s.assetId)] : [];
 
-/** Trạng thái hiển thị gọn cho 1 luồng. */
+/** Trạng thái hiển thị gọn cho 1 live. */
 export function streamBadge(s: Stream | (Omit<Stream, "streamKey"> & { shouldBeLive?: boolean }), machineOnline: boolean): { tone: "green" | "amber" | "red" | "gray" | "blue"; text: string } {
   const want = "shouldBeLive" in s && s.shouldBeLive != null ? s.shouldBeLive : shouldBeLive(s as Stream);
   if (s.moveState) return { tone: "blue", text: "Đang chuyển máy" };

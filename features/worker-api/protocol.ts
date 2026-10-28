@@ -10,7 +10,7 @@ export interface AgentRequest {
   assets?: AgentAssetReport[];
   streams?: AgentStreamReport[];
   uploaded?: AgentUploaded[];       // video tải thẳng lên máy, chờ đăng ký
-  incidents?: AgentIncident[];      // các lần luồng rớt rồi tự bật lại
+  incidents?: AgentIncident[];      // các lần live rớt rồi tự bật lại
 }
 
 export interface AgentAssetReport {

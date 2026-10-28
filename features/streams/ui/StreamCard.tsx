@@ -1,5 +1,5 @@
 "use client";
-// Thẻ 1 luồng: trạng thái, số liệu phát, YouTube, và các nút thao tác.
+// Thẻ 1 live: trạng thái, số liệu phát, YouTube, và các nút thao tác.
 import { useState, type ReactNode } from "react";
 import { Button, Card, Collapse, Dropdown, Select, Space, Tooltip, Typography, type MenuProps } from "antd";
 import {
@@ -42,25 +42,25 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
     if (r) setKey(r.streamKey);
   };
   const rename = async () => {
-    const v = await prompt({ title: "Đổi tên luồng", initial: s.name, required: true });
-    if (v != null && v !== s.name) void call("", { name: v }, "Đã đổi tên luồng.", "PATCH");
+    const v = await prompt({ title: "Đổi tên live", initial: s.name, required: true });
+    if (v != null && v !== s.name) void call("", { name: v }, "Đã đổi tên live.", "PATCH");
   };
   const editWatchUrl = async () => {
     const v = await prompt({ title: "Link xem trên YouTube", label: "Dán mã buổi live hoặc link YouTube (hệ thống tự đổi thành youtube.com/watch?v=…):", initial: s.watchUrl ?? "" });
     if (v != null && v !== (s.watchUrl ?? "")) void call("", { watchUrl: v }, "Đã lưu link xem.", "PATCH");
   };
   const flagYoutube = async () => {
-    const note = await prompt({ title: "Báo YouTube chặn/đình chỉ luồng", label: "Worker sẽ DỪNG đẩy luồng này lên YouTube. Ghi chú (không bắt buộc):", okText: "Gắn cờ" });
-    if (note != null) void call("/youtube-issue", { flag: true, note }, "Đã gắn cờ. Worker đã dừng đẩy luồng.");
+    const note = await prompt({ title: "Báo YouTube chặn/đình chỉ live", label: "Worker sẽ DỪNG đẩy live này lên YouTube. Ghi chú (không bắt buộc):", okText: "Gắn cờ" });
+    if (note != null) void call("/youtube-issue", { flag: true, note }, "Đã gắn cờ. Worker đã dừng đẩy live.");
   };
   const stop = async () => {
-    if (await confirm({ title: `Dừng luồng “${s.name}”?`, okText: "Dừng phát", danger: true })) void call("/control", { desired: "stopped" }, "Đã gửi lệnh dừng.");
+    if (await confirm({ title: `Dừng live “${s.name}”?`, okText: "Dừng phát", danger: true })) void call("/control", { desired: "stopped" }, "Đã gửi lệnh dừng.");
   };
   const remove = async () => {
-    if (await confirm({ title: `Xóa luồng “${s.name}”?`, content: "Thao tác này không thể hoàn tác.", okText: "Xóa", danger: true })) void call("", undefined, "Đã xóa luồng.", "DELETE");
+    if (await confirm({ title: `Xóa live “${s.name}”?`, content: "Thao tác này không thể hoàn tác.", okText: "Xóa", danger: true })) void call("", undefined, "Đã xóa live.", "DELETE");
   };
   const convert = async () => {
-    if (await confirm({ title: "Chuyển luồng này thành Live 24/7?", okText: "Chuyển" })) void call("/convert", {}, "Đã chuyển sang Live 24/7.");
+    if (await confirm({ title: "Chuyển live này thành Live 24/7?", okText: "Chuyển" })) void call("/convert", {}, "Đã chuyển sang Live 24/7.");
   };
 
   const more: NonNullable<MenuProps["items"]> = [
@@ -72,7 +72,7 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
       ? { key: "unflag", icon: <FlagOff size={14} />, label: "Gỡ cờ YouTube chặn", onClick: () => void call("/youtube-issue", { flag: false }, "Đã gỡ cờ YouTube.") }
       : { key: "flag", icon: <Flag size={14} />, label: "Báo YouTube chặn/đình chỉ", onClick: flagYoutube },
     ...(s.mode === "live-pub" ? [{ key: "convert", icon: <Zap size={14} />, label: "Chuyển thành Live 24/7", onClick: convert }] : []),
-    ...(!s.shouldBeLive ? [{ type: "divider" as const }, { key: "delete", icon: <Trash size={14} />, label: "Xóa luồng", danger: true, onClick: remove }] : []),
+    ...(!s.shouldBeLive ? [{ type: "divider" as const }, { key: "delete", icon: <Trash size={14} />, label: "Xóa live", danger: true, onClick: remove }] : []),
   ];
 
   const ytStatus = s.yt && (s.yt.found
@@ -114,8 +114,8 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
         {s.ytIssue && <Meta danger>YouTube: {s.ytIssue.note || "bị gắn cờ chặn/đình chỉ"} ({s.ytIssue.by ?? (s.ytIssue.source === "auto" ? "tự động" : "thủ công")}, {fmtTime(s.ytIssue.at)})</Meta>}
         <Meta icon={<KeyRound size={13} />}>
           <Text code style={{ fontSize: 12 }}>{key || s.streamKeyMasked}</Text>
-          {op && <Tooltip title={key ? "Ẩn khóa luồng" : "Hiện khóa luồng"}><Button type="text" size="small" icon={key ? <EyeOff size={14} /> : <Eye size={14} />} onClick={reveal} /></Tooltip>}
-          {key && <CopyButton text={key} label="Sao chép khóa luồng" iconOnly />}
+          {op && <Tooltip title={key ? "Ẩn khóa live" : "Hiện khóa live"}><Button type="text" size="small" icon={key ? <EyeOff size={14} /> : <Eye size={14} />} onClick={reveal} /></Tooltip>}
+          {key && <CopyButton text={key} label="Sao chép khóa live" iconOnly />}
           <span style={{ margin: "0 6px" }}>·</span>
           {s.watchUrl ? <a href={s.watchUrl} target="_blank" rel="noreferrer">Xem trên YouTube <ExternalLink size={12} style={{ verticalAlign: -1 }} /></a> : <Text type="secondary">Chưa có link xem</Text>}
           {ytStatus}

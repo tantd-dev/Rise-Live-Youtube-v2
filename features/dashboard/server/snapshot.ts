@@ -1,4 +1,4 @@
-// Gom dữ liệu cho giao diện: máy (kèm online/số luồng), video, luồng (che khóa), tổng quan, cảnh báo.
+// Gom dữ liệu cho giao diện: máy (kèm online/số live), video, live (che khóa), tổng quan, cảnh báo.
 import { COL, readAll } from "@/lib/server/firestore";
 import { env } from "@/lib/server/env";
 import { computeAlerts } from "@/features/alerts/compute";

@@ -5,7 +5,7 @@ import { deleteStream, editStream, patchStream, type StreamInput } from "@/featu
 export const dynamic = "force-dynamic";
 type Ctx = { params: Promise<{ id: string }> };
 
-/** Sửa toàn bộ (chỉ khi luồng đã dừng). */
+/** Sửa toàn bộ (chỉ khi live đã dừng). */
 export const PUT = route(async (req: Request, { params }: Ctx) => {
   const user = await requireUser("streams.operate");
   await editStream((await params).id, await readBody<StreamInput>(req), user);

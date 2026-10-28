@@ -19,7 +19,7 @@ ASSETS = os.path.join(BASE, "assets")       # <assetId>.mp4 đã sẵn sàng ph�
 RAW = os.path.join(BASE, "raw")             # file gốc vừa tải, chờ chuẩn hoá
 THUMBS = os.path.join(BASE, "thumbs")       # <streamId>.jpg ảnh đang phát
 LOGS = os.path.join(BASE, "logs")           # <streamId>.err — dòng lỗi ffmpeg (đọc lý do rớt)
-PLAYLISTS = os.path.join(BASE, "playlists")  # danh sách phát (concat) khi luồng có nhiều video
+PLAYLISTS = os.path.join(BASE, "playlists")  # danh sách phát (concat) khi live có nhiều video
 
 MAX_PARALLEL_DOWNLOADS = max(1, int(os.environ.get("RISE_LIVE_MAX_PARALLEL_DOWNLOADS") or 2))
 try:
@@ -27,7 +27,7 @@ try:
 except ValueError:
     MAX_ENCODE = 1
 
-# Tự khởi động lại luồng: chớp tắt > RESTART_MAX lần trong RESTART_WINDOW giây → tạm ngừng theo BẬC thang
+# Tự khởi động lại live: chớp tắt > RESTART_MAX lần trong RESTART_WINDOW giây → tạm ngừng theo BẬC thang
 # chờ (20s → 40s → 60s → 120s → 300s lặp mãi). Chạy ổn định > STABLE_RESET_SEC → về bậc đầu.
 RESTART_WINDOW = 120
 RESTART_MAX = 5
@@ -35,7 +35,7 @@ RETRY_LADDER = [20, 40, 60, 120, 300]
 STABLE_RESET_SEC = 300
 STALL_SEC = 25                 # đồng hồ ffmpeg đứng yên quá lâu → coi là treo, giết để bật lại
 PUB_GRACE_SEC = 90             # Live Pub rớt: cho nối lại trong khung này, quá thì coi như buổi đã kết thúc
-SSD_MIN_FREE_GB = 15           # dưới mức này → chặn tải video mới (bảo vệ luồng đang phát)
+SSD_MIN_FREE_GB = 15           # dưới mức này → chặn tải video mới (bảo vệ live đang phát)
 
 # Gọi máy chủ: chờ tối đa 15s; hụt thì thử lại nhanh 5s (tối đa 3 lần) để không bị coi là "mất liên lạc".
 SYNC_TIMEOUT = 15

@@ -5,7 +5,7 @@ Hệ phát trực tiếp 24/7 lên YouTube từ nhiều VPS — viết lại t�
 
 ```
 LỚP ĐIỀU KHIỂN (Next.js + Firestore)          MỖI VPS (worker Python)
- giao diện · quyết định luồng nào chạy ở đâu  ◄── hỏi/đáp ~20s ──  tự tải video (Drive / chép VPS→VPS)
+ giao diện · quyết định live nào chạy ở đâu  ◄── hỏi/đáp ~20s ──  tự tải video (Drive / chép VPS→VPS)
  nhận nhịp tim · cảnh báo · tự cứu                                 chạy FFmpeg copy-codec → YouTube RTMP
 ```
 
@@ -48,7 +48,7 @@ npm run worker     # 3. worker (từ PowerShell sẽ tự chạy trong WSL Ubunt
 ```
 
 Sau đó: **Kho video** thêm video (link Google Drive, hoặc tải thẳng nếu có `RISE_LIVE_UPLOAD_TOKEN`) → chờ "Sẵn sàng"
-→ **Luồng phát → Tạo luồng**: chọn máy, video, dán **khóa luồng** + **link xem** (`youtube.com/watch?v=…`) từ
+→ **Phiên live → Tạo live**: chọn máy, video, dán **khóa live** + **link xem** (`youtube.com/watch?v=…`) từ
 YouTube Studio. RTMP YouTube (`rtmp://a.rtmp.youtube.com/live2`) đã đặt sẵn.
 
 Lỗi worker hay gặp: `HTTP 404` = sai `RISE_LIVE_MACHINE` (máy chưa đăng ký) · `HTTP 401` = sai mã xác thực.
@@ -70,7 +70,7 @@ features/<miền>/          mỗi miền một thư mục, cùng một nếp:
   ui/                     thành phần React của miền đó
     machines   VPS, vé worker, khối lệnh cài, sức chứa băng thông
     assets     kho video, link Drive, preset, tải thẳng, sao chép VPS→VPS
-    streams    luồng, lịch phát, khoá luồng, bật/dừng, sửa
+    streams    live, lịch phát, khoá live, bật/dừng, sửa
     youtube    link xem + kiểm buổi live bằng API key
     failover   chuyển máy 2 pha, tự cứu khi máy chết, công tắc tắt khẩn
     alerts     tính cảnh báo + email (Resend)
@@ -93,7 +93,7 @@ Thêm tính năng mới: tạo `features/<tên>/` (types/rules thuần → serve
 
 ## Phân quyền
 
-Vai trò lưu ở `users/<email>.liveRole`: **admin** (máy, người dùng, cài đặt + mọi thứ) · **operator** (luồng, video) ·
+Vai trò lưu ở `users/<email>.liveRole`: **admin** (máy, người dùng, cài đặt + mọi thứ) · **operator** (live, video) ·
 **viewer** (chỉ xem). Bản ghi cũ có `role: "admin"` hoặc quyền `riseLive` được hiểu tương ứng admin/operator.
 Tài khoản đầu tiên khi triển khai thật: `npm run create-user -- email@x.vn 'mat-khau' admin "Họ tên"`.
 
@@ -107,19 +107,19 @@ Tài khoản đầu tiên khi triển khai thật: `npm run create-user -- email
   `/worker/rise-live-worker.pyz`, tạo dịch vụ systemd `rise-live`). Chạy lại khối = cập nhật worker.
   Worker **không** tự cập nhật — sửa worker xong phải chạy lại khối trên từng VPS và đối chiếu cột phiên bản.
 
-> ⚠ Đừng trỏ worker thử vào máy chủ đang chạy thật: worker sẽ nhận và đẩy luồng thật.
+> ⚠ Đừng trỏ worker thử vào máy chủ đang chạy thật: worker sẽ nhận và đẩy live thật.
 
 ## So với bản cũ — đã giữ / đã bỏ
 
 Giữ: máy (thêm/sửa/bảo trì/ngắt/xoá, mã máy + vé riêng, khối cài), kho video (Drive, tải thẳng, chép VPS→VPS,
-tiến độ tải, đối chiếu file thiếu), luồng (24/7 & Pub, bật tay & hẹn giờ, danh sách phát, sửa/bật/dừng/xoá,
+tiến độ tải, đối chiếu file thiếu), live (24/7 & Pub, bật tay & hẹn giờ, danh sách phát, sửa/bật/dừng/xoá,
 che khoá + xem khoá, link xem, Pub→24/7, nền đen chủ ý, cờ YouTube chặn), sức chứa băng thông 70%, chặn trùng khoá,
 chuyển máy 2 pha + hoàn tác, tự cứu + lease + công tắc tắt khẩn, cảnh báo + email, nhật ký sự cố, ảnh đang phát,
 toàn bộ cơ chế worker (bậc thang thử lại, lỗi nguồn dừng hẳn, ân hạn Live Pub, phát hiện treo, màn đen, tốc độ).
 
 Chưa làm / cố ý bỏ (có thể thêm sau theo nếp `features/`):
 - Nối YouTube qua **OAuth** (tạo/chuyển trạng thái buổi phát, lấy khoá tự động) — V2 dùng khoá dán tay + **API key** để theo dõi.
-- Gắn luồng với **kênh** của Rise Work (`channels`), phân quyền theo đơn vị/đội và gói quyền chi tiết — thay bằng 3 vai trò.
-- Tự nhân bản video dự phòng cho luồng ưu tiên, dọn bản dự phòng mồ côi, ước tính chi phí, bảng N+1 sức chứa cụm.
+- Gắn live với **kênh** của Rise Work (`channels`), phân quyền theo đơn vị/đội và gói quyền chi tiết — thay bằng 3 vai trò.
+- Tự nhân bản video dự phòng cho live ưu tiên, dọn bản dự phòng mồ côi, ước tính chi phí, bảng N+1 sức chứa cụm.
 - Kênh realtime SSE (giao diện tự làm mới 4–15 giây), chuông/thông báo điện thoại, lưu ảnh lên GCS, các script đo `rl-*.ts`.
-- Worker: bỏ "nhận lại luồng đang phát" (bản cũ cũng đã tắt); khi khởi động chỉ dọn ffmpeg của **chính** thư mục dữ liệu worker.
+- Worker: bỏ "nhận lại live đang phát" (bản cũ cũng đã tắt); khi khởi động chỉ dọn ffmpeg của **chính** thư mục dữ liệu worker.

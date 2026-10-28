@@ -45,7 +45,7 @@ export interface MoveCandidate {
   freeMbps: number | null;
 }
 
-/** Chấm các máy đích khả dĩ cho 1 luồng (đã sắp: hợp lệ + còn nhiều băng thông lên đầu). */
+/** Chấm các máy đích khả dĩ cho 1 live (đã sắp: hợp lệ + còn nhiều băng thông lên đầu). */
 export function moveCandidates(stream: Stream, machines: Machine[], streams: Stream[], assets: Asset[], nowMs = Date.now()): MoveCandidate[] {
   const per = streamMbps(findPreset(stream.presetId));
   return machines.filter((m) => m.id !== stream.machineId).map((m) => {

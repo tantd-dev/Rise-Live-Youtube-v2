@@ -10,7 +10,7 @@ export async function logIncident(x: Omit<IncidentLog, "id" | "createdAt" | "res
   }).catch(() => undefined);
 }
 
-/** Gộp nhật ký cố định + các lần tự phục hồi gần đây của từng luồng, mới nhất lên đầu. */
+/** Gộp nhật ký cố định + các lần tự phục hồi gần đây của từng live, mới nhất lên đầu. */
 export async function listIncidents(limit = 300): Promise<IncidentRow[]> {
   const [logSnap, sSnap] = await Promise.all([
     db.collection(COL.incidents).orderBy("createdAt", "desc").limit(limit).get(),
