@@ -42,7 +42,7 @@ export function OverviewTab({ onGo }: { onGo: (tab: string) => void }) {
         <AlertList alerts={data.alerts} onPick={(a) => onGo(a.streamId ? "streams" : a.machineId ? "machines" : "assets")} />
       </ProCard>
 
-      {/* {data.failover && <FailoverSwitchCard sw={data.failover} />} */}
+      {data.failover && <FailoverSwitchCard sw={data.failover} />}
     </>
   );
 }
