@@ -33,3 +33,9 @@ export async function readBody<T = Record<string, unknown>>(req: Request): Promi
 }
 
 export const str = (v: unknown, max = 300) => String(v ?? "").trim().slice(0, max);
+
+/** Chuyển hướng bằng đường dẫn TƯƠNG ĐỐI (trình duyệt tự ghép với tên miền đang mở).
+ *  Không dùng `new URL(path, req.url)`: sau reverse proxy, req.url là địa chỉ nội bộ (vd http://localhost:3000). */
+export function redirectTo(path: string, status: 302 | 303 | 307 = 303): Response {
+  return new Response(null, { status, headers: { Location: path } });
+}
