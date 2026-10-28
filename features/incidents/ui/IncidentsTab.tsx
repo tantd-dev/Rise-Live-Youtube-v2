@@ -39,7 +39,7 @@ export function IncidentsTab() {
       {err && <Alert type="error" showIcon message="Không tải được nhật ký" description={err} style={{ marginBottom: 16 }} />}
       <ProTable<IncidentRow>
         rowKey="key"
-        headerTitle="Nhật ký sự cố"
+        headerTitle="Danh sách sự cố"
         loading={loading && !rows}
         dataSource={shown}
         columns={columns}

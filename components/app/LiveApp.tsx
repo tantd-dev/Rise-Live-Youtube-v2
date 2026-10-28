@@ -5,6 +5,7 @@ import { PageContainer, ProLayout } from "@ant-design/pro-components";
 import { Alert, Avatar, Badge, Button, Dropdown, Spin, Tooltip } from "antd";
 import { Film, LayoutDashboard, LogOut, Radio, ScrollText, Server, Users } from "lucide-react";
 import { AppProvider, useApp } from "./AppContext";
+import { useIsDark } from "./Providers";
 import { OverviewTab } from "@/features/dashboard/ui/OverviewTab";
 import { StreamsTab } from "@/features/streams/ui/StreamsTab";
 import { AssetsTab } from "@/features/assets/ui/AssetsTab";
@@ -30,8 +31,12 @@ function logout() {
 
 function Shell() {
   const { data, loadError, can } = useApp();
+  const dark = useIsDark();
   const [tab, setTab] = useState("overview");
+  // ProLayout đo kích thước màn hình khi dựng → chỉ dựng phía trình duyệt để tránh lệch hydrate.
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
+    setMounted(true);
     try { const t = localStorage.getItem("rl.tab"); if (t) setTab(t); } catch { /* không có localStorage */ }
   }, []);
   const go = (t: string) => { setTab(t); try { localStorage.setItem("rl.tab", t); } catch { /* bỏ qua */ } };
@@ -45,9 +50,11 @@ function Shell() {
     machines: { n: data?.machines.length ?? 0 },
   };
 
+  if (!mounted) return <div className="center-screen"><Spin size="large" /></div>;
   return (
     <ProLayout
       title="AB Live"
+      navTheme={dark ? "realDark" : "light"}
       logo={<Radio size={22} color="#dc2626" />}
       layout="top"
       fixedHeader
@@ -75,10 +82,10 @@ function Shell() {
       } : undefined}
       token={{ pageContainer: { paddingBlockPageContainerContent: 16, paddingInlinePageContainerContent: 16 } }}
     >
-      <PageContainer title={current.label} style={{ maxWidth: 1400, margin: "0 auto" }}>
+      <PageContainer title={current.label} style={{ width: "100%", maxWidth: 1400, margin: "0 auto" }}>
         {loadError && <Alert type="error" showIcon style={{ marginBottom: 16 }} message="Không tải được dữ liệu" description={loadError} />}
         {!data ? (
-          <div style={{ padding: 80, textAlign: "center" }}><Spin size="large" tip="Đang tải dữ liệu…"><div style={{ height: 40 }} /></Spin></div>
+          <div style={{ padding: 80, textAlign: "center" }}><Spin size="large" /><div style={{ marginTop: 12, opacity: 0.6 }}>Đang tải dữ liệu…</div></div>
         ) : (
           <>
             {current.id === "overview" && <OverviewTab onGo={go} />}

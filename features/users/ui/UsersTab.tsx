@@ -59,7 +59,7 @@ export function UsersTab() {
     <>
       <ProCard title={<Space><UserPlus size={18} />Thêm hoặc cập nhật người dùng</Space>} headerBordered style={{ marginBottom: 16 }}
         subTitle="Nhập email đã có để cập nhật họ tên, vai trò hoặc đặt lại mật khẩu">
-        <Form form={form} layout="vertical" initialValues={{ role: "operator" }} requiredMark="optional"
+        <Form form={form} layout="vertical" initialValues={{ role: "operator" }}
           onFinish={async (v) => { if (await save({ ...v, password: v.password || undefined }, "Đã lưu người dùng.")) form.setFieldValue("password", ""); }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", columnGap: 16 }}>
             <Form.Item name="email" label="Email" rules={[{ required: true, message: "Nhập email" }, { type: "email", message: "Email không hợp lệ" }]}><Input autoComplete="off" /></Form.Item>

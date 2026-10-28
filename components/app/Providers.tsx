@@ -1,13 +1,17 @@
 "use client";
 // Bọc toàn app: antd (tiếng Việt, sáng/tối theo hệ điều hành) + App để dùng message/modal theo theme.
 import "@ant-design/v5-patch-for-react-19";
-import { useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { App, ConfigProvider, theme } from "antd";
 import viVN from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 
 dayjs.locale("vi");
+
+const DarkCtx = createContext(false);
+/** Giao diện đang ở chế độ tối (theo hệ điều hành)? */
+export const useIsDark = () => useContext(DarkCtx);
 
 export function Providers({ children }: { children: ReactNode }) {
   const [dark, setDark] = useState(false);
@@ -26,7 +30,7 @@ export function Providers({ children }: { children: ReactNode }) {
         token: { colorPrimary: "#2563eb", borderRadius: 8, fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" },
       }}
     >
-      <App>{children}</App>
+      <DarkCtx.Provider value={dark}><App>{children}</App></DarkCtx.Provider>
     </ConfigProvider>
   );
 }

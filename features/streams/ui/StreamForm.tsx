@@ -59,7 +59,7 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
   return (
     <Modal open title={stream ? `Sửa luồng “${stream.name}”` : "Tạo luồng phát"} onCancel={onClose} width={900} destroyOnHidden
       okText={stream ? "Lưu" : control === "manual" ? "Tạo và lên sóng" : "Tạo luồng hẹn giờ"} cancelText="Hủy" confirmLoading={busy} onOk={() => form.submit()}>
-      <Form form={form} layout="vertical" initialValues={initial(stream)} onFinish={submit} requiredMark="optional"
+      <Form form={form} layout="vertical" initialValues={initial(stream)} onFinish={submit}
         onValuesChange={(ch) => {
           if ("machineId" in ch) form.setFieldValue("assetIds", []);
           if (ch.importance && ch.importance !== "normal") form.setFieldValue("failoverMode", "automatic");

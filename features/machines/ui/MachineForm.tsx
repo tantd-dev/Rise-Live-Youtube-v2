@@ -29,7 +29,7 @@ export function MachineForm({ machine, onClose, onCreated }: { machine?: Machine
   return (
     <Modal open title={machine ? `Sửa máy phát “${machine.name}”` : "Thêm máy phát (VPS)"} onCancel={onClose} width={860} destroyOnHidden
       okText={machine ? "Lưu" : "Thêm máy"} cancelText="Hủy" confirmLoading={busy} onOk={() => form.submit()}>
-      <Form form={form} layout="vertical" initialValues={initial} onFinish={submit} requiredMark="optional">
+      <Form form={form} layout="vertical" initialValues={initial} onFinish={submit}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", columnGap: 16 }}>
           <Form.Item name="name" label="Tên máy" rules={[{ required: true, whitespace: true, message: "Nhập tên máy" }]}><Input placeholder="VD: VPS 01" /></Form.Item>
           <Form.Item name="ip" label="Địa chỉ IP" rules={[{ required: true, whitespace: true, message: "Nhập địa chỉ IP" }]}

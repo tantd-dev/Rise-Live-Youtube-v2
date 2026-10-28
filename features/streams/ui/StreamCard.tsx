@@ -138,7 +138,7 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
               onChange={(v) => call("", { importance: v }, "Đã đổi mức ưu tiên.", "PATCH")}
               options={[{ value: "normal", label: "Bình thường" }, { value: "priority", label: "Ưu tiên" }, { value: "critical", label: "Quan trọng" }]} />
             <Dropdown menu={{ items: more }} trigger={["click"]} disabled={busy}>
-              <Button icon={<Ellipsis size={14} />}>Thêm</Button>
+              <Button icon={<Ellipsis size={14} />}>Khác</Button>
             </Dropdown>
           </Space>
         )}

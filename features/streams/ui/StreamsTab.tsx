@@ -43,11 +43,13 @@ export function StreamsTab() {
           </Space>
         )}
       >
-        <Space wrap style={{ width: "100%", justifyContent: "space-between", marginBottom: 16 }}>
-          <Segmented value={filter} onChange={(v) => setFilter(String(v))}
-            options={FILTERS.map((f) => ({ value: f.id, label: `${f.label} (${streams.filter(f.test).length})` }))} />
-          <Input allowClear prefix={<Search size={14} />} placeholder="Tìm theo tên luồng…" value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 260 }} />
-        </Space>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ maxWidth: "100%", overflowX: "auto" }}>
+            <Segmented value={filter} onChange={(v) => setFilter(String(v))}
+              options={FILTERS.map((f) => ({ value: f.id, label: `${f.label} (${streams.filter(f.test).length})` }))} />
+          </div>
+          <Input allowClear prefix={<Search size={14} />} placeholder="Tìm theo tên luồng…" value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 260, maxWidth: "100%" }} />
+        </div>
         {!shown.length
           ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={streams.length ? "Không có luồng nào khớp bộ lọc." : "Chưa có luồng nào. Cần có: 1 máy phát trực tuyến, 1 video sẵn sàng trên máy đó và khóa luồng YouTube."} />
           : <Space direction="vertical" size={12} style={{ width: "100%" }}>{shown.map((s) => <StreamCard key={s.id} s={s} onEdit={() => setForm({ stream: s })} onMove={() => setMoving(s)} />)}</Space>}
