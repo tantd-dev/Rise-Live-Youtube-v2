@@ -50,7 +50,7 @@ export async function addMachine(b: MachineInput, by: string): Promise<string> {
 export async function updateMachine(id: string, b: MachineInput, by: string): Promise<void> {
   if (!(await readOne<Machine>(COL.machines, id))) throw notFound("Máy không tồn tại.");
   const patch = toPatch(b);
-  if (patch.name === "") throw bad("Tên máy không được trống.");
+  if (patch.name === "") throw bad("Tên VPS không được trống.");
   await db.collection(COL.machines).doc(id).set({ ...patch, updatedAt: nowISO() }, { merge: true });
   await audit(by, "machine.update", id, JSON.stringify(patch).slice(0, 200));
 }
