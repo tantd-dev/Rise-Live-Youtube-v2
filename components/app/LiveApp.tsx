@@ -65,9 +65,13 @@ function Shell({ children }: { children: ReactNode }) {
       ]}
       avatarProps={data ? {
         icon: <Avatar style={{ background: "#2563eb" }}>{(data.user.fullName || data.user.email).trim().charAt(0).toUpperCase()}</Avatar>,
-        title: <Tooltip title={`${data.user.email} · ${ROLE_LABEL[data.user.role]}`}>{data.user.fullName || data.user.email}</Tooltip>,
+        title: data.user.fullName || data.user.email,
         render: (_props, dom) => (
-          <Dropdown menu={{ items: [{ key: "logout", icon: <LogOut size={14} />, label: "Đăng xuất", onClick: logout }] }}>{dom}</Dropdown>
+          <Dropdown trigger={["click"]} placement="topLeft" menu={{ items: [
+            { key: "me", disabled: true, style: { cursor: "default" }, label: <div style={{ lineHeight: 1.4 }}><div>{data.user.email}</div><div style={{ fontSize: 12, opacity: 0.7 }}>{ROLE_LABEL[data.user.role]}</div></div> },
+            { type: "divider" },
+            { key: "logout", icon: <LogOut size={14} />, label: "Đăng xuất", onClick: logout },
+          ] }}>{dom}</Dropdown>
         ),
       } : undefined}
       token={{ pageContainer: { paddingBlockPageContainerContent: 16, paddingInlinePageContainerContent: 16 } }}
