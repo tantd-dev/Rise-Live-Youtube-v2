@@ -3,9 +3,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { PageContainer, ProLayout } from "@ant-design/pro-components";
 import { Alert, Avatar, Badge, Button, Dropdown, Spin, Tooltip } from "antd";
-import { Film, LayoutDashboard, LogOut, Radio, ScrollText, Server, Users } from "lucide-react";
+import { Film, LayoutDashboard, LogOut, Moon, Radio, ScrollText, Server, Sun, Users } from "lucide-react";
 import { AppProvider, useApp } from "./AppContext";
-import { useIsDark } from "./Providers";
+import { useTheme } from "./Providers";
 import { OverviewTab } from "@/features/dashboard/ui/OverviewTab";
 import { StreamsTab } from "@/features/streams/ui/StreamsTab";
 import { AssetsTab } from "@/features/assets/ui/AssetsTab";
@@ -31,7 +31,7 @@ function logout() {
 
 function Shell() {
   const { data, loadError, can } = useApp();
-  const dark = useIsDark();
+  const { dark, toggle: toggleTheme } = useTheme();
   const [tab, setTab] = useState("overview");
   // ProLayout đo kích thước màn hình khi dựng → chỉ dựng phía trình duyệt để tránh lệch hydrate.
   const [mounted, setMounted] = useState(false);
@@ -72,7 +72,12 @@ function Shell() {
         );
       }}
       onMenuHeaderClick={() => go("overview")}
-      actionsRender={() => []}
+      actionsRender={() => [
+        <Tooltip key="theme" title={dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}>
+          <Button type="text" shape="circle" aria-label={dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
+            icon={dark ? <Sun size={18} /> : <Moon size={18} />} onClick={toggleTheme} />
+        </Tooltip>,
+      ]}
       avatarProps={data ? {
         icon: <Avatar style={{ background: "#2563eb" }}>{(data.user.fullName || data.user.email).trim().charAt(0).toUpperCase()}</Avatar>,
         title: <Tooltip title={data.user.email}>{data.user.fullName || data.user.email} · {ROLE_LABEL[data.user.role]}</Tooltip>,
