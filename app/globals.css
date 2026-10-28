@@ -18,6 +18,11 @@ pre.code { background: #0e1420; color: #d5deea; padding: 12px; border-radius: 8p
 .stream-card .ant-card-body { display: flex; gap: 16px; }
 .stream-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 @media (max-width: 640px) {
+  .ant-pro-card-header { flex-wrap: wrap; gap: 8px; }
+  .ant-pro-card-title { flex-wrap: wrap; white-space: normal; }
+  .ant-pro-card-title, .ant-pro-core-label-tip { min-width: 0; max-width: 100%; }
+  .ant-pro-core-label-tip { flex-wrap: wrap; row-gap: 2px; }
+  .ant-pro-card .ant-pro-core-label-tip .ant-pro-core-label-tip-subtitle { white-space: normal; margin-inline-start: 0; }
   .stream-card .ant-card-body { flex-direction: column; }
   .stream-thumb { width: 100%; height: 180px; }
 }

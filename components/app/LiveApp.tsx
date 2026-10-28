@@ -1,27 +1,16 @@
 "use client";
-// Khung ứng dụng (ProLayout): menu trên + các tab. Mỗi tab là 1 thành phần của đúng miền nghiệp vụ.
+// Khung ứng dụng (ProLayout): menu dọc bên trái, mỗi mục là 1 route. Dữ liệu tổng (AppProvider) nằm ở layout
+// nên không tải lại khi chuyển trang.
 import { useEffect, useState, type ReactNode } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { PageContainer, ProLayout } from "@ant-design/pro-components";
 import { Alert, Avatar, Badge, Button, Dropdown, Spin, Tooltip } from "antd";
-import { Film, LayoutDashboard, LogOut, Moon, Radio, ScrollText, Server, Sun, Users } from "lucide-react";
+import { LogOut, Moon, Radio, Sun } from "lucide-react";
 import { AppProvider, useApp } from "./AppContext";
 import { useTheme } from "./Providers";
-import { OverviewTab } from "@/features/dashboard/ui/OverviewTab";
-import { StreamsTab } from "@/features/streams/ui/StreamsTab";
-import { AssetsTab } from "@/features/assets/ui/AssetsTab";
-import { MachinesTab } from "@/features/machines/ui/MachinesTab";
-import { IncidentsTab } from "@/features/incidents/ui/IncidentsTab";
-import { UsersTab } from "@/features/users/ui/UsersTab";
-import { ROLE_LABEL, type Permission } from "@/features/users/types";
-
-const TABS: { id: string; label: string; icon: ReactNode; perm: Permission }[] = [
-  { id: "overview", label: "Dashboard", icon: <LayoutDashboard size={16} />, perm: "view" },
-  { id: "streams", label: "Lives", icon: <Radio size={16} />, perm: "view" },
-  { id: "assets", label: "Videos", icon: <Film size={16} />, perm: "view" },
-  { id: "machines", label: "VPS", icon: <Server size={16} />, perm: "view" },
-  { id: "incidents", label: "Logs", icon: <ScrollText size={16} />, perm: "view" },
-  { id: "users", label: "Users", icon: <Users size={16} />, perm: "users.manage" },
-];
+import { NAV, navFor } from "./nav";
+import { ROLE_LABEL } from "@/features/users/types";
 
 function logout() {
   const f = document.createElement("form");
@@ -29,26 +18,24 @@ function logout() {
   document.body.appendChild(f); f.submit();
 }
 
-function Shell() {
+function Shell({ children }: { children: ReactNode }) {
   const { data, loadError, can } = useApp();
   const { dark, toggle: toggleTheme } = useTheme();
-  const [tab, setTab] = useState("overview");
+  const pathname = usePathname() ?? "/";
+  const router = useRouter();
   // ProLayout đo kích thước màn hình khi dựng → chỉ dựng phía trình duyệt để tránh lệch hydrate.
   const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-    try { const t = localStorage.getItem("rl.tab"); if (t) setTab(t); } catch { /* không có localStorage */ }
-  }, []);
-  const go = (t: string) => { setTab(t); try { localStorage.setItem("rl.tab", t); } catch { /* bỏ qua */ } };
-  const tabs = TABS.filter((t) => can(t.perm));
-  const current = tabs.find((t) => t.id === tab) ?? tabs[0] ?? TABS[0];
+  useEffect(() => setMounted(true), []);
+  const nav = NAV.filter((n) => can(n.perm));
+  const current = navFor(pathname);
   const o = data?.overview;
-  const badge: Record<string, { n: number; danger?: boolean }> = {
-    overview: { n: (o?.alertsCritical ?? 0) + (o?.alertsWarn ?? 0), danger: !!o?.alertsCritical },
+  const badge = {
+    alerts: { n: (o?.alertsCritical ?? 0) + (o?.alertsWarn ?? 0), danger: !!o?.alertsCritical },
     streams: { n: data?.streams.length ?? 0 },
     assets: { n: data?.assets.length ?? 0 },
     machines: { n: data?.machines.length ?? 0 },
-  };
+  } as Record<string, { n: number; danger?: boolean }>;
+  const themeLabel = dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối";
 
   if (!mounted) return <div className="center-screen"><Spin size="large" /></div>;
   return (
@@ -56,31 +43,29 @@ function Shell() {
       title="AB Live"
       navTheme={dark ? "realDark" : "light"}
       logo={<Radio size={22} color="#dc2626" />}
-      layout="top"
-      fixedHeader
+      layout="side"
+      siderWidth={232}
       contentWidth="Fluid"
-      location={{ pathname: `/${current.id}` }}
-      route={{ path: "/", routes: tabs.map((t) => ({ path: `/${t.id}`, name: t.label, icon: t.icon })) }}
+      location={{ pathname: current.path }}
+      route={{ path: "/", routes: nav.map((n) => ({ path: n.path, name: n.label, icon: n.icon, badge: n.badge })) }}
       menuItemRender={(item, dom) => {
-        const id = String(item.path ?? "").slice(1);
-        const b = badge[id];
+        const b = item.badge ? badge[item.badge as string] : undefined;
         return (
-          <a onClick={() => go(id)} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            {dom}
+          <Link href={item.path ?? "/"} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ flex: 1, minWidth: 0 }}>{dom}</span>
             {b?.n ? <Badge count={b.n} size="small" overflowCount={999} color={b.danger ? "#dc2626" : "rgba(127,127,127,.35)"} /> : null}
-          </a>
+          </Link>
         );
       }}
-      onMenuHeaderClick={() => go("overview")}
+      onMenuHeaderClick={() => router.push("/")}
       actionsRender={() => [
-        <Tooltip key="theme" title={dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}>
-          <Button type="text" shape="circle" aria-label={dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
-            icon={dark ? <Sun size={18} /> : <Moon size={18} />} onClick={toggleTheme} />
+        <Tooltip key="theme" title={themeLabel}>
+          <Button type="text" shape="circle" aria-label={themeLabel} icon={dark ? <Sun size={18} /> : <Moon size={18} />} onClick={toggleTheme} />
         </Tooltip>,
       ]}
       avatarProps={data ? {
         icon: <Avatar style={{ background: "#2563eb" }}>{(data.user.fullName || data.user.email).trim().charAt(0).toUpperCase()}</Avatar>,
-        title: <Tooltip title={data.user.email}>{data.user.fullName || data.user.email} · {ROLE_LABEL[data.user.role]}</Tooltip>,
+        title: <Tooltip title={`${data.user.email} · ${ROLE_LABEL[data.user.role]}`}>{data.user.fullName || data.user.email}</Tooltip>,
         render: (_props, dom) => (
           <Dropdown menu={{ items: [{ key: "logout", icon: <LogOut size={14} />, label: "Đăng xuất", onClick: logout }] }}>{dom}</Dropdown>
         ),
@@ -88,25 +73,16 @@ function Shell() {
       token={{ pageContainer: { paddingBlockPageContainerContent: 16, paddingInlinePageContainerContent: 16 } }}
     >
       <PageContainer title={current.label} style={{ width: "100%", maxWidth: 1400, margin: "0 auto" }}>
-        {loadError && <Alert type="error" showIcon style={{ marginBottom: 16 }} message="Không tải được dữ liệu" description={loadError} />}
+        {loadError && <Alert type="error" showIcon style={{ marginBottom: 16 }} message="Không tải được dữ liệu" description={loadError}
+          action={!data && <Button size="small" onClick={() => location.reload()}>Tải lại trang</Button>} />}
         {!data ? (
           <div style={{ padding: 80, textAlign: "center" }}><Spin size="large" /><div style={{ marginTop: 12, opacity: 0.6 }}>Đang tải dữ liệu…</div></div>
-        ) : (
-          <>
-            {current.id === "overview" && <OverviewTab onGo={go} />}
-            {current.id === "streams" && <StreamsTab />}
-            {current.id === "assets" && <AssetsTab />}
-            {current.id === "machines" && <MachinesTab />}
-            {current.id === "incidents" && <IncidentsTab />}
-            {current.id === "users" && can("users.manage") && <UsersTab />}
-          </>
-        )}
-        {!data && loadError && <Button onClick={() => location.reload()}>Tải lại trang</Button>}
+        ) : children}
       </PageContainer>
     </ProLayout>
   );
 }
 
-export function LiveApp() {
-  return <AppProvider><Shell /></AppProvider>;
+export function LiveApp({ children }: { children: ReactNode }) {
+  return <AppProvider><Shell>{children}</Shell></AppProvider>;
 }

@@ -11,7 +11,7 @@ export function LoginForm({ devLogin }: { devLogin: boolean }) {
     setBusy(true); setErr("");
     try {
       await api("/api/auth/login", { body: v });
-      location.reload();
+      location.href = "/";
     } catch (x) {
       setErr(x instanceof Error ? x.message : String(x));
     } finally {

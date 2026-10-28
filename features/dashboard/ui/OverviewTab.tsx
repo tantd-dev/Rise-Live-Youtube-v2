@@ -18,7 +18,7 @@ function Stat({ title, value, tone, icon, hint }: { title: string; value: ReactN
   );
 }
 
-export function OverviewTab({ onGo }: { onGo: (tab: string) => void }) {
+export function OverviewTab({ onGo }: { onGo: (path: string) => void }) {
   const { data } = useApp();
   if (!data) return null;
   const o = data.overview;
@@ -39,7 +39,7 @@ export function OverviewTab({ onGo }: { onGo: (tab: string) => void }) {
         extra={<Typography.Text type="secondary">Tự làm mới · cập nhật lúc {new Date(data.serverTime).toLocaleTimeString("vi-VN")}</Typography.Text>}
         style={{ marginBottom: 16 }}
       >
-        <AlertList alerts={data.alerts} onPick={(a) => onGo(a.streamId ? "streams" : a.machineId ? "machines" : "assets")} />
+        <AlertList alerts={data.alerts} onPick={(a) => onGo(a.streamId ? "/streams" : a.machineId ? "/machines" : "/assets")} />
       </ProCard>
 
       {data.failover && <FailoverSwitchCard sw={data.failover} />}
