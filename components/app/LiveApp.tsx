@@ -18,7 +18,7 @@ const TABS: { id: string; label: string; icon: ReactNode; perm: Permission }[] =
   { id: "overview", label: "Tổng quan", icon: <LayoutDashboard size={16} />, perm: "view" },
   { id: "streams", label: "Lives", icon: <Radio size={16} />, perm: "view" },
   { id: "assets", label: "Kho video", icon: <Film size={16} />, perm: "view" },
-  { id: "machines", label: "Máy phát", icon: <Server size={16} />, perm: "view" },
+  { id: "machines", label: "VPS", icon: <Server size={16} />, perm: "view" },
   { id: "incidents", label: "Logs", icon: <ScrollText size={16} />, perm: "view" },
   { id: "users", label: "Người dùng", icon: <Users size={16} />, perm: "users.manage" },
 ];
