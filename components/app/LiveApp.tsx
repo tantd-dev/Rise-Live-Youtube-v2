@@ -1,5 +1,5 @@
 "use client";
-// Khung ứng dụng (ProLayout): menu dọc bên trái, mỗi mục là 1 route. Dữ liệu tổng (AppProvider) nằm ở layout
+// Khung ứng dụng (ProLayout "mix"): thanh trên full-width (logo, nút sáng/tối, tài khoản) + menu dọc bên trái, mỗi mục là 1 route. Dữ liệu tổng (AppProvider) nằm ở layout
 // nên không tải lại khi chuyển trang.
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
@@ -43,7 +43,10 @@ function Shell({ children }: { children: ReactNode }) {
       title="AB Live"
       navTheme={dark ? "realDark" : "light"}
       logo={<Radio size={22} color="#dc2626" />}
-      layout="side"
+      layout="mix"
+      fixedHeader
+      fixSiderbar
+      splitMenus={false}
       siderWidth={232}
       contentWidth="Fluid"
       location={{ pathname: current.path }}
@@ -67,7 +70,7 @@ function Shell({ children }: { children: ReactNode }) {
         icon: <Avatar style={{ background: "#2563eb" }}>{(data.user.fullName || data.user.email).trim().charAt(0).toUpperCase()}</Avatar>,
         title: data.user.fullName || data.user.email,
         render: (_props, dom) => (
-          <Dropdown trigger={["click"]} placement="topLeft" menu={{ items: [
+          <Dropdown trigger={["click"]} placement="bottomRight" menu={{ items: [
             { key: "me", disabled: true, style: { cursor: "default" }, label: <div style={{ lineHeight: 1.4 }}><div>{data.user.email}</div><div style={{ fontSize: 12, opacity: 0.7 }}>{ROLE_LABEL[data.user.role]}</div></div> },
             { type: "divider" },
             { key: "logout", icon: <LogOut size={14} />, label: "Đăng xuất", onClick: logout },
