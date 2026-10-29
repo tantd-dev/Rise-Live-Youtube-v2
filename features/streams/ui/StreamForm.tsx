@@ -137,7 +137,7 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
               </Tooltip>
             </div>
           </Form.Item>
-          <Form.Item name="watchUrl" label="Link xem buổi live trên YouTube"
+          <Form.Item name="watchUrl" label="Link xem buổi live trên YouTube" style={{ gridColumn: "1 / -1" }}
             rules={[{ required: true, message: "Dán mã hoặc link buổi live" }, { validator: (_, v) => (v ? fromCheck(checkWatchUrl(v)) : Promise.resolve()) }]}
             tooltip={{ title: "Chỉ cần dán MÃ buổi live — hệ thống tự đổi thành https://www.youtube.com/watch?v=<mã>.", icon: <Info size={14} /> }}>
             <WatchUrlInput />
