@@ -15,7 +15,8 @@ const FILTERS = [
   { id: "live", label: "Đang bật", test: (s: StreamView) => !!s.shouldBeLive },
   { id: "issue", label: "Có sự cố", test: (s: StreamView) => !!(s.ytIssue || s.needsHuman || s.restartHalted || s.health === "error" || s.slow || (s.black && !s.allowBlack)) },
   { id: "schedule", label: "Hẹn giờ", test: (s: StreamView) => s.control === "schedule" },
-  { id: "stopped", label: "Đã dừng", test: (s: StreamView) => !s.shouldBeLive },
+  { id: "stopped", label: "Đã dừng", test: (s: StreamView) => !s.shouldBeLive && !s.endedAt },
+  { id: "ended", label: "Đã kết thúc", test: (s: StreamView) => !!s.endedAt },
 ];
 
 export function StreamsTab() {

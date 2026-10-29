@@ -29,13 +29,17 @@ function Shell({ children }: { children: ReactNode }) {
   const nav = NAV.filter((n) => can(n.perm));
   const current = navFor(pathname);
   const o = data?.overview;
+  // Số cạnh menu. Lives = số live ĐANG BẬT (nền đỏ như đèn "đang phát"); các mục khác = tổng số, nền xanh nhạt.
   const badge = {
-    alerts: { n: (o?.alertsCritical ?? 0) + (o?.alertsWarn ?? 0), danger: !!o?.alertsCritical },
-    streams: { n: data?.streams.length ?? 0 },
-    assets: { n: data?.assets.length ?? 0 },
-    machines: { n: data?.machines.length ?? 0 },
-    channels: { n: data?.channels.length ?? 0 },
-  } as Record<string, { n: number; danger?: boolean }>;
+    alerts: { n: (o?.alertsCritical ?? 0) + (o?.alertsWarn ?? 0), tone: o?.alertsCritical ? "live" : "soft" },
+    streams: { n: data?.streams.filter((s) => s.shouldBeLive).length ?? 0, tone: "live", title: "Số live đang bật" },
+    assets: { n: data?.assets.length ?? 0, tone: "soft" },
+    machines: { n: data?.machines.length ?? 0, tone: "soft" },
+    channels: { n: data?.channels.length ?? 0, tone: "soft" },
+  } as Record<string, { n: number; tone: "live" | "soft"; title?: string }>;
+  const badgeStyle = (tone: "live" | "soft") => tone === "live"
+    ? { backgroundColor: "#dc2626", color: "#fff", boxShadow: "none" }
+    : { backgroundColor: dark ? "rgba(37, 99, 235, .28)" : "#e6efff", color: dark ? "#93b4ff" : "#1d4ed8", boxShadow: "none" };
   const themeLabel = dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối";
 
   if (!mounted) return <div className="center-screen"><Spin size="large" /></div>;
@@ -57,7 +61,7 @@ function Shell({ children }: { children: ReactNode }) {
         return (
           <Link href={item.path ?? "/"} style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ flex: 1, minWidth: 0 }}>{dom}</span>
-            {b?.n ? <Badge count={b.n} size="small" overflowCount={999} color={b.danger ? "#dc2626" : "rgba(127,127,127,.35)"} /> : null}
+            {b?.n ? <Badge count={b.n} size="small" overflowCount={999} title={b.title} style={badgeStyle(b.tone)} /> : null}
           </Link>
         );
       }}

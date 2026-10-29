@@ -30,6 +30,8 @@ export interface Stream {
   control: StreamControl;
   schedule: Schedule | null;
   desiredState: "live" | "stopped";
+  endedAt?: string | null;         // đã bấm "Kết thúc live": phiên live này xong hẳn, không lên sóng lại (muốn phát tiếp → Sửa, đổi link/khóa)
+  endedBy?: string | null;
   watchUrl?: string | null;        // link xem trên YouTube (youtube.com/watch?v=…)
   allowBlack?: boolean;            // nội dung tối/đen chủ ý → bỏ qua cảnh báo màn đen
   importance?: Importance;

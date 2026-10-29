@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { Button, Card, Collapse, Dropdown, Select, Space, Tooltip, Typography, type MenuProps } from "antd";
 import {
   ArrowLeftRight, CircleCheck, Clock, Ellipsis, ExternalLink, Eye, EyeOff, Film, Flag, FlagOff, KeyRound, LifeBuoy, Link2,
-  Moon, Pencil, Play, RefreshCw, Server, Square, Trash, Tv, TvMinimalPlay, Type, Zap,
+  CircleStop, Moon, Pencil, Play, Radio, RefreshCw, Server, Square, Trash, Tv, TvMinimalPlay, Type, Zap,
 } from "lucide-react";
 import { useApp } from "@/components/app/AppContext";
 import { Pill, TONE_HEX } from "@/components/ui/primitives";
@@ -36,6 +36,8 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
   const badge = streamBadge(s, !!machine?.online);
   const op = can("streams.operate");
   const live = s.status === "live" && s.shouldBeLive;
+  // "Xem live" khi live còn đang phát (VPS đang đẩy, hoặc YouTube báo đang live); hết live → "Xem trên YouTube".
+  const onAir = !s.endedAt && (live || s.yt?.liveBroadcastContent === "live");
   const call = (path: string, body: unknown, ok: string, method = "POST") => run(() => api(`/api/streams/${s.id}${path}`, { method, body }), ok);
 
   const reveal = async () => {
@@ -57,6 +59,14 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
   };
   const stop = async () => {
     if (await confirm({ title: `Dừng live “${s.name}”?`, okText: "Dừng phát", danger: true })) void call("/control", { desired: "stopped" }, "Đã gửi lệnh dừng.");
+  };
+  const end = async () => {
+    const ok = await confirm({
+      title: `Kết thúc live “${s.name}”?`,
+      content: <>VPS sẽ ngừng phát và phiên live này được đánh dấu <b>đã kết thúc</b>, không thể lên sóng lại (muốn phát tiếp thì bấm “Sửa” để cập nhật link/khóa mới). Buổi live trên YouTube sẽ tự kết thúc nếu đã bật “Tự động dừng” trong YouTube Studio.</>,
+      okText: "Kết thúc live", danger: true,
+    });
+    if (ok) void call("/end", {}, "Đã kết thúc live.");
   };
   const remove = async () => {
     if (await confirm({ title: `Xóa live “${s.name}”?`, content: "Thao tác này không thể hoàn tác.", okText: "Xóa", danger: true })) void call("", undefined, "Đã xóa live.", "DELETE");
@@ -92,6 +102,7 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
         <Space size={6} wrap>
           <Text strong style={{ fontSize: 15 }}>{s.name}</Text>
           <Pill tone={badge.tone}>{badge.text}</Pill>
+          {channel && <Pill tone="blue" icon={<Tv size={12} />} title={channel.description || undefined}>{channel.name}</Pill>}
           <Pill>{MODE_LABEL[s.mode]}</Pill>
           {s.importance && s.importance !== "normal" && <Pill tone="amber">{IMPORTANCE_LABEL[s.importance]}</Pill>}
           {s.failoverMode === "automatic" && <Pill tone="blue" icon={<LifeBuoy size={12} />}>Dự phòng tự động</Pill>}
@@ -113,18 +124,18 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
           </Meta>
         )}
         {(s.haltReason || (s.health === "error" && s.error)) && <Meta danger>Lý do: {s.haltReason || s.error}</Meta>}
+        {s.endedAt && <Meta icon={<CircleStop size={13} />}>Đã kết thúc lúc {fmtTime(s.endedAt)}{s.endedBy ? ` bởi ${s.endedBy}` : ""}</Meta>}
         {s.ytIssue && <Meta danger>YouTube: {s.ytIssue.note || "bị gắn cờ chặn/đình chỉ"} ({s.ytIssue.by ?? (s.ytIssue.source === "auto" ? "tự động" : "thủ công")}, {fmtTime(s.ytIssue.at)})</Meta>}
         <Meta icon={<KeyRound size={13} />}>
-          {channel && (
-            <Tooltip title={channelKey?.description || undefined}>
-              <span style={{ marginRight: 6 }}><Tv size={13} style={{ marginRight: 4, verticalAlign: -2 }} />{channel.name}{channelKey ? ` · ${channelKey.name}` : ""}</span>
+          {channelKey && (
+            <Tooltip title={channelKey.description || undefined}>
+              <span style={{ marginRight: 6 }}>{channelKey.name}</span>
             </Tooltip>
           )}
           <Text code style={{ fontSize: 12 }}>{key || s.streamKeyMasked}</Text>
           {op && <Tooltip title={key ? "Ẩn khóa live" : "Hiện khóa live"}><Button type="text" size="small" icon={key ? <EyeOff size={14} /> : <Eye size={14} />} onClick={reveal} /></Tooltip>}
           {key && <CopyButton text={key} label="Sao chép khóa live" iconOnly />}
-          <span style={{ margin: "0 6px" }}>·</span>
-          {s.watchUrl ? <a href={s.watchUrl} target="_blank" rel="noreferrer">Xem trên YouTube <ExternalLink size={12} style={{ verticalAlign: -1 }} /></a> : <Text type="secondary">Chưa có link xem</Text>}
+          {!s.watchUrl && <Text type="secondary"> · Chưa có link xem</Text>}
           {ytStatus}
         </Meta>
         {!!s.recentIncidents?.length && (
@@ -134,21 +145,27 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
             children: <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>{s.recentIncidents.map((ev, i) => <li key={i}>{fmtTime(ev.at)} · mất sóng {fmtDuration(ev.downSec)} · {ev.reason || ev.kind}</li>)}</ul>,
           }]} />
         )}
-        {op && (
-          <Space size={8} wrap style={{ marginTop: 4 }}>
-            {s.shouldBeLive
-              ? <Button danger type="primary" icon={<Square size={14} />} disabled={busy} onClick={stop}>Dừng phát</Button>
-              : <Button type="primary" icon={<Play size={14} />} disabled={busy} onClick={() => call("/control", { desired: "live" }, "Đã gửi lệnh lên sóng. VPS sẽ nhận lệnh sau vài giây.")}>Lên sóng</Button>}
-            {!s.shouldBeLive && <Button icon={<Pencil size={14} />} disabled={busy} onClick={onEdit}>Sửa</Button>}
-            {s.shouldBeLive && !s.moveState && <Button icon={<ArrowLeftRight size={14} />} disabled={busy} onClick={onMove}>Chuyển máy</Button>}
+        <Space size={8} wrap style={{ marginTop: 4 }}>
+          {op && !s.endedAt && (s.shouldBeLive
+            ? <Button danger type="primary" icon={<Square size={14} />} disabled={busy} onClick={stop}>Dừng phát</Button>
+            : <Button type="primary" icon={<Play size={14} />} disabled={busy} onClick={() => call("/control", { desired: "live" }, "Đã gửi lệnh lên sóng. VPS sẽ nhận lệnh sau vài giây.")}>Lên sóng</Button>)}
+          {s.watchUrl && (onAir
+            ? <Button href={s.watchUrl} target="_blank" icon={<Radio size={14} color="#dc2626" />}>Xem live</Button>
+            : <Button href={s.watchUrl} target="_blank" icon={<ExternalLink size={14} />}>Xem trên YouTube</Button>)}
+          {op && !s.shouldBeLive && <Button icon={<Pencil size={14} />} disabled={busy} onClick={onEdit}>Sửa</Button>}
+          {op && s.shouldBeLive && !s.moveState && <Button icon={<ArrowLeftRight size={14} />} disabled={busy} onClick={onMove}>Chuyển máy</Button>}
+          {op && !s.endedAt && <Button danger icon={<CircleStop size={14} />} disabled={busy || !!s.moveState} onClick={end}>Kết thúc live</Button>}
+          {op && !s.endedAt && (
             <Select size="middle" value={s.importance ?? "normal"} disabled={busy} style={{ width: 140 }} title="Mức ưu tiên"
               onChange={(v) => call("", { importance: v }, "Đã đổi mức ưu tiên.", "PATCH")}
               options={[{ value: "normal", label: "Bình thường" }, { value: "priority", label: "Ưu tiên" }, { value: "critical", label: "Quan trọng" }]} />
+          )}
+          {op && (
             <Dropdown menu={{ items: more }} trigger={["click"]} disabled={busy}>
               <Button icon={<Ellipsis size={14} />}>Khác</Button>
             </Dropdown>
-          </Space>
-        )}
+          )}
+        </Space>
       </div>
     </Card>
   );

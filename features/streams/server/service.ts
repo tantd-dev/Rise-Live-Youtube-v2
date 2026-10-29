@@ -135,7 +135,7 @@ export async function editStream(id: string, b: StreamInput, user: SessionUser) 
   const { data } = await validate(keepKey
     ? { ...b, streamKey: cur.streamKey, channelId: cur.channelKeyId ? cur.channelId ?? "" : b.channelId, channelKeyId: cur.channelKeyId ?? "" }
     : b, id);
-  await db.collection(COL.streams).doc(id).set({ ...data, desiredState: "stopped", updatedAt: nowISO(), updatedBy: user.email }, { merge: true });
+  await db.collection(COL.streams).doc(id).set({ ...data, desiredState: "stopped", endedAt: null, endedBy: null, updatedAt: nowISO(), updatedBy: user.email }, { merge: true });
   await audit(user.email, "stream.edit", id, data.name);
 }
 
@@ -145,6 +145,7 @@ export async function setDesired(id: string, desired: "live" | "stopped", user: 
   const patch: Record<string, unknown> = { desiredState: desired, updatedAt: nowISO(), updatedBy: user.email };
   let warnings: string[] = [];
   if (desired === "live") {
+    if (s.endedAt) throw bad("Live này đã kết thúc. Bấm “Sửa” để cập nhật link xem/khóa live mới rồi mới lên sóng lại.");
     const machine = await readOne<Machine>(COL.machines, s.machineId);
     if (!machine) throw bad("Máy của live không còn tồn tại — sửa live chọn máy khác.");
     const assets = await Promise.all(streamAssetIds(s).map((a) => readOne<Asset>(COL.assets, a)));
@@ -169,6 +170,19 @@ export async function setDesired(id: string, desired: "live" | "stopped", user: 
   await db.collection(COL.streams).doc(id).set(patch, { merge: true });
   await audit(user.email, "stream.set", id, desired);
   return { warnings };
+}
+
+/** Kết thúc live: dừng đẩy (như "Dừng phát") và đánh dấu phiên đã xong — không lên sóng lại được nữa cho tới khi Sửa.
+ *  Lưu ý: chỉ ngừng phát từ VPS; buổi live trên YouTube tự kết thúc nếu bật "Tự động dừng" trong YouTube Studio. */
+export async function endStream(id: string, user: SessionUser) {
+  const s = await getStream(id);
+  if (s.endedAt) throw bad("Live này đã kết thúc rồi.");
+  if (s.moveState) throw bad("live đang chuyển máy — chờ xong rồi kết thúc.");
+  if (shouldBeLive(s)) await setDesired(id, "stopped", user);
+  await db.collection(COL.streams).doc(id).set({
+    desiredState: "stopped", control: "manual", endedAt: nowISO(), endedBy: user.email, updatedAt: nowISO(), updatedBy: user.email,
+  }, { merge: true });
+  await audit(user.email, "stream.end", id, s.name);
 }
 
 export async function deleteStream(id: string, user: SessionUser) {

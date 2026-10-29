@@ -23,6 +23,7 @@ export function streamBadge(s: Stream | (Omit<Stream, "streamKey"> & { shouldBeL
   const want = "shouldBeLive" in s && s.shouldBeLive != null ? s.shouldBeLive : shouldBeLive(s as Stream);
   if (s.moveState) return { tone: "blue", text: "Đang chuyển máy" };
   if (s.ytIssue) return { tone: "red", text: "Bị YouTube chặn" };
+  if (s.endedAt && !want) return { tone: "gray", text: "Đã kết thúc" };
   if (s.needsHuman) return { tone: "red", text: "Đã dừng — lỗi nguồn video" };
   if (!want) return s.control === "schedule" ? { tone: "gray", text: "Chờ đến giờ" } : { tone: "gray", text: "Đã dừng" };
   if (!machineOnline) return { tone: "amber", text: "Máy mất liên lạc" };

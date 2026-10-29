@@ -2,7 +2,7 @@
 // Form tạo / sửa live.
 import { useMemo, useState } from "react";
 import { Button, Checkbox, DatePicker, Divider, Empty, Form, Input, InputNumber, Modal, Select, Tooltip, Typography } from "antd";
-import { KeyRound, Plus } from "lucide-react";
+import { Info, KeyRound, Plus } from "lucide-react";
 import dayjs, { type Dayjs } from "dayjs";
 import { useApp } from "@/components/app/AppContext";
 import { api } from "@/lib/client/api";
@@ -67,7 +67,7 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
   };
 
   return (
-    <Modal open title={stream ? `Sửa live “${stream.name}”` : "Tạo Phiên live"} onCancel={onClose} width={900} destroyOnHidden
+    <Modal open title={stream ? `Sửa live “${stream.name}”` : "Tạo Phiên live"} onCancel={onClose} width={1120} style={{ maxWidth: "calc(100vw - 32px)" }} destroyOnHidden
       okText={stream ? "Lưu" : control === "manual" ? "Tạo và lên sóng" : "Tạo live hẹn giờ"} cancelText="Hủy" confirmLoading={busy} onOk={() => form.submit()}>
       <Form form={form} layout="vertical" initialValues={initial(stream)} onFinish={submit}
         onValuesChange={(ch) => {
@@ -104,9 +104,8 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
               )} />
           </Form.Item>
           <Form.Item label="Khóa live YouTube" required={!legacy}
-            extra={legacy
-              ? `Live này đang dùng khóa nhập tay (${stream?.streamKeyMasked}). Chọn khóa của kênh để thay, hoặc để trống để giữ nguyên.`
-              : "Rê chuột vào từng khóa để xem mô tả. Địa chỉ RTMP đã được cấu hình sẵn."}>
+            tooltip={{ title: "Rê chuột vào từng khóa để xem mô tả. Địa chỉ RTMP đã được cấu hình sẵn.", icon: <Info size={14} /> }}
+            extra={legacy ? `Live này đang dùng khóa nhập tay (${stream?.streamKeyMasked}). Chọn khóa của kênh để thay, hoặc để trống để giữ nguyên.` : undefined}>
             <div style={{ display: "flex", gap: 8 }}>
               <Form.Item name="channelKeyId" noStyle rules={legacy ? [] : [{ required: true, message: "Chọn khóa live" }]}>
                 <Select placeholder={channel ? (channel.keys.length ? "Chọn khóa live" : "Kênh chưa có khóa — tạo khóa mới") : "Chọn kênh trước"}
@@ -140,7 +139,7 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
           </Form.Item>
           <Form.Item name="watchUrl" label="Link xem buổi live trên YouTube"
             rules={[{ required: true, message: "Dán mã hoặc link buổi live" }, { validator: (_, v) => (v ? fromCheck(checkWatchUrl(v)) : Promise.resolve()) }]}
-            extra="Chỉ cần dán MÃ buổi live — hệ thống tự đổi thành https://www.youtube.com/watch?v=<mã>.">
+            tooltip={{ title: "Chỉ cần dán MÃ buổi live — hệ thống tự đổi thành https://www.youtube.com/watch?v=<mã>.", icon: <Info size={14} /> }}>
             <WatchUrlInput />
           </Form.Item>
           <Form.Item name="control" label="Cách bật live">
