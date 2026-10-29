@@ -71,6 +71,7 @@ features/<miền>/          mỗi miền một thư mục, cùng một nếp:
     machines   VPS, vé worker, khối lệnh cài, sức chứa băng thông
     assets     kho video, link Drive, preset, tải thẳng, sao chép VPS→VPS
     streams    live, lịch phát, khoá live, bật/dừng, sửa
+    channels   kênh YouTube + các khóa live của kênh (chọn khi tạo live, khóa được chép vào live)
     youtube    link xem + kiểm buổi live bằng API key
     failover   chuyển máy 2 pha, tự cứu khi máy chết, công tắc tắt khẩn
     alerts     tính cảnh báo + email (Resend)

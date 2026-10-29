@@ -5,6 +5,7 @@ import type { MachineView } from "@/features/machines/types";
 import type { StreamView } from "@/features/streams/types";
 import type { SessionUser } from "@/features/users/types";
 import type { FailoverSwitch } from "@/features/failover/types";
+import type { ChannelView } from "@/features/channels/types";
 
 export interface Overview {
   streamsLive: number;
@@ -27,6 +28,7 @@ export interface DashboardData {
   machines: MachineView[];
   assets: Asset[];
   streams: StreamView[];
+  channels: ChannelView[];
   failover: FailoverSwitch | null;   // chỉ Quản trị
   config: {
     uploadEnabled: boolean;

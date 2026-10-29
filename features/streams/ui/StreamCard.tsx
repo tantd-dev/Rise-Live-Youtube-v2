@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { Button, Card, Collapse, Dropdown, Select, Space, Tooltip, Typography, type MenuProps } from "antd";
 import {
   ArrowLeftRight, CircleCheck, Clock, Ellipsis, ExternalLink, Eye, EyeOff, Film, Flag, FlagOff, KeyRound, LifeBuoy, Link2,
-  Moon, Pencil, Play, RefreshCw, Server, Square, Trash, TvMinimalPlay, Type, Zap,
+  Moon, Pencil, Play, RefreshCw, Server, Square, Trash, Tv, TvMinimalPlay, Type, Zap,
 } from "lucide-react";
 import { useApp } from "@/components/app/AppContext";
 import { Pill, TONE_HEX } from "@/components/ui/primitives";
@@ -30,6 +30,8 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
   const [key, setKey] = useState("");
   const [thumbErr, setThumbErr] = useState(false);
   const machine = data?.machines.find((m) => m.id === s.machineId);
+  const channel = s.channelId ? data?.channels.find((c) => c.id === s.channelId) : undefined;
+  const channelKey = channel?.keys.find((k) => k.id === s.channelKeyId);
   const assetNames = (s.assetIds?.length ? s.assetIds : [s.assetId]).map((id) => data?.assets.find((a) => a.id === id)?.name ?? "(video đã xóa)");
   const badge = streamBadge(s, !!machine?.online);
   const op = can("streams.operate");
@@ -113,6 +115,11 @@ export function StreamCard({ s, onEdit, onMove }: { s: StreamView; onEdit: () =>
         {(s.haltReason || (s.health === "error" && s.error)) && <Meta danger>Lý do: {s.haltReason || s.error}</Meta>}
         {s.ytIssue && <Meta danger>YouTube: {s.ytIssue.note || "bị gắn cờ chặn/đình chỉ"} ({s.ytIssue.by ?? (s.ytIssue.source === "auto" ? "tự động" : "thủ công")}, {fmtTime(s.ytIssue.at)})</Meta>}
         <Meta icon={<KeyRound size={13} />}>
+          {channel && (
+            <Tooltip title={channelKey?.description || undefined}>
+              <span style={{ marginRight: 6 }}><Tv size={13} style={{ marginRight: 4, verticalAlign: -2 }} />{channel.name}{channelKey ? ` · ${channelKey.name}` : ""}</span>
+            </Tooltip>
+          )}
           <Text code style={{ fontSize: 12 }}>{key || s.streamKeyMasked}</Text>
           {op && <Tooltip title={key ? "Ẩn khóa live" : "Hiện khóa live"}><Button type="text" size="small" icon={key ? <EyeOff size={14} /> : <Eye size={14} />} onClick={reveal} /></Tooltip>}
           {key && <CopyButton text={key} label="Sao chép khóa live" iconOnly />}

@@ -34,6 +34,7 @@ function Shell({ children }: { children: ReactNode }) {
     streams: { n: data?.streams.length ?? 0 },
     assets: { n: data?.assets.length ?? 0 },
     machines: { n: data?.machines.length ?? 0 },
+    channels: { n: data?.channels.length ?? 0 },
   } as Record<string, { n: number; danger?: boolean }>;
   const themeLabel = dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối";
 

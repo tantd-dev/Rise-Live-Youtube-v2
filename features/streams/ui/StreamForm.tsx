@@ -1,18 +1,19 @@
 "use client";
 // Form tạo / sửa live.
-import { useMemo } from "react";
-import { Checkbox, DatePicker, Divider, Empty, Form, Input, InputNumber, Modal, Select, Typography } from "antd";
+import { useMemo, useState } from "react";
+import { Button, Checkbox, DatePicker, Divider, Empty, Form, Input, InputNumber, Modal, Select, Tooltip, Typography } from "antd";
+import { KeyRound, Plus } from "lucide-react";
 import dayjs, { type Dayjs } from "dayjs";
 import { useApp } from "@/components/app/AppContext";
 import { api } from "@/lib/client/api";
 import { fmtDuration } from "@/lib/client/format";
-import { checkStreamKey } from "../stream-key";
 import { checkWatchUrl } from "@/features/youtube/types";
 import { WatchUrlInput } from "@/features/youtube/ui/WatchUrlInput";
+import { ChannelForm, ChannelKeyForm } from "@/features/channels/ui/ChannelForms";
 import type { StreamView } from "../types";
 
 interface FormState {
-  name: string; mode: string; machineId?: string; assetIds: string[]; playMode: string; streamKey: string; watchUrl: string;
+  name: string; mode: string; machineId?: string; assetIds: string[]; playMode: string; channelId?: string; channelKeyId?: string; watchUrl: string;
   control: string; scheduleStart: Dayjs | null; scheduleDurationMin: number | null; scheduleRepeat: string;
   importance: string; failoverMode: string; allowBlack: boolean;
 }
@@ -20,7 +21,7 @@ interface FormState {
 function initial(s?: StreamView): FormState {
   return {
     name: s?.name ?? "", mode: s?.mode ?? "stream-247", machineId: s?.machineId || undefined, assetIds: s?.assetIds?.length ? s.assetIds : s?.assetId ? [s.assetId] : [],
-    playMode: s?.playMode ?? "sequence", streamKey: "", watchUrl: s?.watchUrl ?? "",
+    playMode: s?.playMode ?? "sequence", channelId: s?.channelId || undefined, channelKeyId: s?.channelKeyId || undefined, watchUrl: s?.watchUrl ?? "",
     control: s?.control ?? "manual", scheduleStart: s?.schedule?.start ? dayjs(s.schedule.start) : null, scheduleDurationMin: s?.schedule?.durationMin || null,
     scheduleRepeat: s?.schedule?.repeat ?? "none", importance: s?.importance ?? "normal", failoverMode: s?.failoverMode ?? "disabled", allowBlack: !!s?.allowBlack,
   };
@@ -28,6 +29,8 @@ function initial(s?: StreamView): FormState {
 
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", columnGap: 16 } as const;
 const fromCheck = (r: { ok: true } | { ok: false; error: string }) => (r.ok ? Promise.resolve() : Promise.reject(new Error(r.error)));
+// Live cũ (tạo trước khi có Quản lý kênh) dùng khóa nhập tay → khi sửa được phép giữ nguyên, không bắt chọn khóa.
+const isLegacyKey = (s?: StreamView) => !!s && !s.channelKeyId;
 
 export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: () => void }) {
   const { data, run, busy } = useApp();
@@ -37,14 +40,21 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
   const control = Form.useWatch("control", form) ?? initial(stream).control;
   const importance = Form.useWatch("importance", form) ?? initial(stream).importance;
   const assetIds: string[] = Form.useWatch("assetIds", form) ?? [];
+  const channelId: string | undefined = Form.useWatch("channelId", form);
+  const [newChannel, setNewChannel] = useState(false);
+  const [newKey, setNewKey] = useState(false);
   const machines = data?.machines ?? [];
+  const channels = data?.channels ?? [];
+  const channel = channels.find((c) => c.id === channelId);
+  const legacy = isLegacyKey(stream);
   const ready = useMemo(() => (data?.assets ?? []).filter((a) => a.status === "ready" && a.machineId === machineId), [data, machineId]);
 
   const submit = async (v: FormState) => {
     const body = {
       ...v,
       machineId: v.machineId ?? "",
-      streamKey: v.streamKey.trim() || undefined,
+      channelId: v.channelId ?? "",
+      channelKeyId: v.channelKeyId ?? "",
       scheduleStart: v.scheduleStart ? v.scheduleStart.format("YYYY-MM-DDTHH:mm") : "",
       scheduleDurationMin: v.scheduleDurationMin ? String(v.scheduleDurationMin) : "",
       failoverMode: v.importance !== "normal" ? "automatic" : v.failoverMode,
@@ -62,6 +72,7 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
       <Form form={form} layout="vertical" initialValues={initial(stream)} onFinish={submit}
         onValuesChange={(ch) => {
           if ("machineId" in ch) form.setFieldValue("assetIds", []);
+          if ("channelId" in ch) form.setFieldValue("channelKeyId", undefined);
           if (ch.importance && ch.importance !== "normal") form.setFieldValue("failoverMode", "automatic");
         }}>
         <div style={grid}>
@@ -80,10 +91,52 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
               label: `${m.name} · ${m.online ? "trực tuyến" : "ngoại tuyến"}${m.maintenance ? " · đang bảo trì" : ""} · ${m.liveCount} live`,
             }))} />
           </Form.Item>
-          <Form.Item name="streamKey" label="Khóa live YouTube"
-            rules={[...(stream ? [] : [{ required: true, whitespace: true, message: "Dán khóa live từ YouTube Studio" }]), { validator: (_, v) => (v ? fromCheck(checkStreamKey(v)) : Promise.resolve()) }]}
-            extra={stream ? "Để trống nếu muốn giữ khóa live hiện tại." : "Lấy tại YouTube Studio › Phát trực tiếp › Khóa live. Địa chỉ RTMP đã được cấu hình sẵn."}>
-            <Input.Password placeholder={stream ? stream.streamKeyMasked : "xxxx-xxxx-xxxx-xxxx-xxxx"} autoComplete="off" visibilityToggle />
+          <Form.Item name="channelId" label="Kênh YouTube" rules={legacy ? [] : [{ required: true, message: "Chọn kênh" }]}>
+            <Select placeholder="Chọn kênh" showSearch optionFilterProp="label"
+              options={channels.map((c) => ({ value: c.id, label: c.name }))}
+              notFoundContent={<Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có kênh nào" />}
+              popupRender={(menu) => (
+                <>
+                  {menu}
+                  <Divider style={{ margin: "4px 0" }} />
+                  <Button type="text" block icon={<Plus size={14} />} style={{ textAlign: "left" }} onClick={() => setNewChannel(true)}>Thêm kênh mới</Button>
+                </>
+              )} />
+          </Form.Item>
+          <Form.Item label="Khóa live YouTube" required={!legacy}
+            extra={legacy
+              ? `Live này đang dùng khóa nhập tay (${stream?.streamKeyMasked}). Chọn khóa của kênh để thay, hoặc để trống để giữ nguyên.`
+              : "Rê chuột vào từng khóa để xem mô tả. Địa chỉ RTMP đã được cấu hình sẵn."}>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Form.Item name="channelKeyId" noStyle rules={legacy ? [] : [{ required: true, message: "Chọn khóa live" }]}>
+                <Select placeholder={channel ? (channel.keys.length ? "Chọn khóa live" : "Kênh chưa có khóa — tạo khóa mới") : "Chọn kênh trước"}
+                  disabled={!channel} allowClear={legacy} style={{ flex: 1, minWidth: 0 }} popupMatchSelectWidth={360}
+                  options={(channel?.keys ?? []).map((k) => ({ value: k.id, label: `${k.name} (${k.keyMasked})` }))}
+                  optionRender={(o) => {
+                    const k = channel?.keys.find((x) => x.id === o.value);
+                    if (!k) return o.label;
+                    return (
+                      <Tooltip title={k.description || "Chưa có mô tả"} placement="right" mouseEnterDelay={0.2}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <KeyRound size={14} />
+                          <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{k.name}</span>
+                          <Typography.Text type="secondary" style={{ fontSize: 12 }}>{k.keyMasked}{k.usedBy ? ` · ${k.usedBy} live` : ""}</Typography.Text>
+                        </div>
+                      </Tooltip>
+                    );
+                  }}
+                  popupRender={(menu) => (
+                    <>
+                      {menu}
+                      <Divider style={{ margin: "4px 0" }} />
+                      <Button type="text" block icon={<Plus size={14} />} style={{ textAlign: "left" }} onClick={() => setNewKey(true)}>Tạo khóa mới cho kênh này</Button>
+                    </>
+                  )} />
+              </Form.Item>
+              <Tooltip title={channel ? "Tạo khóa live mới cho kênh này" : "Chọn kênh trước"}>
+                <Button icon={<Plus size={14} />} disabled={!channel} onClick={() => setNewKey(true)}>Khóa mới</Button>
+              </Tooltip>
+            </div>
           </Form.Item>
           <Form.Item name="watchUrl" label="Link xem buổi live trên YouTube"
             rules={[{ required: true, message: "Dán mã hoặc link buổi live" }, { validator: (_, v) => (v ? fromCheck(checkWatchUrl(v)) : Promise.resolve()) }]}
@@ -130,11 +183,13 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
         <Form.Item name="assetIds" label={`Video phát (đã chọn ${assetIds.length})`} rules={[{ required: true, type: "array", min: 1, message: "Chọn ít nhất 1 video" }]}
           extra={machineId && !ready.length ? "Máy này chưa có video nào sẵn sàng — hãy thêm hoặc sao chép video sang máy này ở tab Kho video." : "Chọn nhiều video để tạo danh sách phát nối tiếp, lặp vòng."}>
           {!machineId ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chọn VPS trước." /> : (
-            <Checkbox.Group style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 240, overflow: "auto", padding: 8, border: "1px solid rgba(127,127,127,.25)", borderRadius: 8 }}
-              options={ready.map((a) => ({
-                value: a.id,
-                label: <span>{a.name} <Typography.Text type="secondary">{[a.width ? `${a.width}×${a.height}` : "", a.durationSec ? fmtDuration(a.durationSec) : ""].filter(Boolean).join(" · ")}</Typography.Text></span>,
-              }))} />
+            <Checkbox.Group style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 240, overflow: "auto", padding: 8, border: "1px solid rgba(127,127,127,.25)", borderRadius: 8 }}>
+              {ready.map((a) => (
+                <Checkbox key={a.id} value={a.id}>
+                  {a.name} <Typography.Text type="secondary">{[a.width ? `${a.width}×${a.height}` : "", a.durationSec ? fmtDuration(a.durationSec) : ""].filter(Boolean).join(" · ")}</Typography.Text>
+                </Checkbox>
+              ))}
+            </Checkbox.Group>
           )}
         </Form.Item>
         {assetIds.length > 1 && (
@@ -146,6 +201,8 @@ export function StreamForm({ stream, onClose }: { stream?: StreamView; onClose: 
           <Checkbox>Video có cảnh tối/đen là chủ ý (không cảnh báo màn hình đen)</Checkbox>
         </Form.Item>
       </Form>
+      {newChannel && <ChannelForm onClose={() => setNewChannel(false)} onSaved={(id) => form.setFieldsValue({ channelId: id, channelKeyId: undefined })} />}
+      {newKey && channel && <ChannelKeyForm channel={channel} onClose={() => setNewKey(false)} onSaved={(id) => form.setFieldValue("channelKeyId", id)} />}
     </Modal>
   );
 }

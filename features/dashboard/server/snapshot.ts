@@ -12,6 +12,7 @@ import { maskKey, redactKeys } from "@/features/streams/stream-key";
 import type { Stream, StreamView } from "@/features/streams/types";
 import { can, type SessionUser } from "@/features/users/types";
 import { getSwitch } from "@/features/failover/server/service";
+import type { Channel, ChannelView } from "@/features/channels/types";
 import type { DashboardData } from "../types";
 
 const byNewest = (a: { createdAt?: string }, b: { createdAt?: string }) => String(b.createdAt ?? "").localeCompare(String(a.createdAt ?? ""));
@@ -32,9 +33,14 @@ export function toStreamView(s: Stream, nowMs: number): StreamView {
 
 export async function buildDashboard(user: SessionUser): Promise<DashboardData> {
   const nowMs = Date.now();
-  const [machines, assets, streams] = await Promise.all([
-    readAll<Machine>(COL.machines, 500), readAll<Asset>(COL.assets, 8000), readAll<Stream>(COL.streams, 5000),
+  const [machines, assets, streams, channels] = await Promise.all([
+    readAll<Machine>(COL.machines, 500), readAll<Asset>(COL.assets, 8000), readAll<Stream>(COL.streams, 5000), readAll<Channel>(COL.channels, 500),
   ]);
+  const channelViews: ChannelView[] = channels.map((c) => ({
+    ...c,
+    streamCount: streams.filter((s) => s.channelId === c.id).length,
+    keys: (c.keys ?? []).map(({ key, ...k }) => ({ ...k, keyMasked: maskKey(key), usedBy: streams.filter((s) => s.channelKeyId === k.id).length })),
+  })).sort((a, b) => a.name.localeCompare(b.name, "vi"));
   const machineViews: MachineView[] = machines.map((m) => ({
     ...m,
     online: isOnline(m, nowMs),
@@ -62,6 +68,7 @@ export async function buildDashboard(user: SessionUser): Promise<DashboardData> 
     machines: machineViews,
     assets: assets.sort(byNewest),
     streams: streamViews,
+    channels: channelViews,
     failover: can(user, "settings.manage") ? await getSwitch() : null,
     config: {
       uploadEnabled: !!env.uploadToken(),

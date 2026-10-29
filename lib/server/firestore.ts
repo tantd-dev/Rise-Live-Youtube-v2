@@ -23,6 +23,7 @@ export const db: Firestore = init();
 /** Tên collection — giữ nguyên như bản cũ để dữ liệu cũ đọc được. */
 export const COL = {
   machines: "liveMachines",
+  channels: "liveChannels",
   assets: "liveAssets",
   streams: "liveStreams",
   incidents: "liveIncidentLog",

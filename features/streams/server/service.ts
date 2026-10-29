@@ -14,9 +14,10 @@ import { schedulesOverlap, type Schedule } from "../schedule";
 import { isPriority, shouldBeLive, streamAssetIds } from "../rules";
 import type { FailoverMode, Importance, Stream, StreamMode } from "../types";
 import { logIncident } from "@/features/incidents/server/service";
+import { resolveChannelKey } from "@/features/channels/server/service";
 
 export interface StreamInput {
-  name?: string; machineId?: string; streamKey?: string; mode?: string; assetIds?: string[]; playMode?: string;
+  name?: string; machineId?: string; streamKey?: string; channelId?: string; channelKeyId?: string; mode?: string; assetIds?: string[]; playMode?: string;
   control?: string; scheduleStart?: string; scheduleDurationMin?: number | string; scheduleRepeat?: string;
   watchUrl?: string; allowBlack?: boolean; importance?: string; failoverMode?: string;
 }
@@ -29,10 +30,15 @@ async function getStream(id: string): Promise<Stream> {
 
 /** Kiểm + chuẩn hóa dữ liệu form tạo/sửa live. */
 async function validate(b: StreamInput, excludeId: string | null) {
-  const name = str(b.name, 120), machineId = str(b.machineId, 80), streamKey = str(b.streamKey, 200);
+  const name = str(b.name, 120), machineId = str(b.machineId, 80);
   const mode: StreamMode = b.mode === "live-pub" ? "live-pub" : "stream-247";
   if (!name) throw bad("Thiếu tên live.");
   if (!machineId) throw bad("Chọn VPS.");
+  // Khóa live: chọn từ kênh (ưu tiên) hoặc khóa nhập tay (live cũ).
+  const channelId = str(b.channelId, 80) || null, channelKeyId = str(b.channelKeyId, 80) || null;
+  if (channelKeyId && !channelId) throw bad("Chọn kênh trước khi chọn khóa live.");
+  const streamKey = channelId && channelKeyId ? (await resolveChannelKey(channelId, channelKeyId)).key.key : str(b.streamKey, 200);
+  if (channelId && !channelKeyId && !str(b.streamKey, 200)) throw bad("Chọn khóa live của kênh.");
   const key = checkStreamKey(streamKey);
   if (!key.ok) throw bad(key.error);
   const watch = checkWatchUrl(b.watchUrl);
@@ -82,7 +88,7 @@ async function validate(b: StreamInput, excludeId: string | null) {
   return {
     machine, assets: assets as Asset[],
     data: {
-      name, machineId, streamKey, mode, control, schedule, watchUrl: watch.url,
+      name, machineId, streamKey, channelId, channelKeyId, mode, control, schedule, watchUrl: watch.url,
       assetIds: ids, assetId: ids[0], presetId: (assets[0] as Asset).presetId,
       playMode: b.playMode === "random" ? "random" : "sequence",
       allowBlack: b.allowBlack === true, importance, failoverMode,
@@ -124,7 +130,11 @@ export async function editStream(id: string, b: StreamInput, user: SessionUser) 
   const cur = await getStream(id);
   if (shouldBeLive(cur)) throw bad("live đang phát — hãy DỪNG trước khi sửa.");
   if (cur.moveState) throw bad("live đang chuyển máy — chờ xong rồi sửa.");
-  const { data } = await validate({ ...b, streamKey: b.streamKey || cur.streamKey }, id);
+  // Không chọn khóa mới → giữ khóa (và nguồn khóa) hiện tại.
+  const keepKey = !b.channelKeyId && !b.streamKey;
+  const { data } = await validate(keepKey
+    ? { ...b, streamKey: cur.streamKey, channelId: cur.channelKeyId ? cur.channelId ?? "" : b.channelId, channelKeyId: cur.channelKeyId ?? "" }
+    : b, id);
   await db.collection(COL.streams).doc(id).set({ ...data, desiredState: "stopped", updatedAt: nowISO(), updatedBy: user.email }, { merge: true });
   await audit(user.email, "stream.edit", id, data.name);
 }

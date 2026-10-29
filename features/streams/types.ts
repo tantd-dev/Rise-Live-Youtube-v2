@@ -25,6 +25,8 @@ export interface Stream {
   mode: StreamMode;
   rtmpBase: string;
   streamKey: string;               // KHÔNG bao giờ gửi nguyên văn ra giao diện (xem StreamView)
+  channelId?: string | null;       // kênh YouTube (Quản lý kênh) — trống với live cũ nhập khóa tay
+  channelKeyId?: string | null;    // khóa live của kênh đã chọn; streamKey là bản chép của khóa này
   control: StreamControl;
   schedule: Schedule | null;
   desiredState: "live" | "stopped";
