@@ -25,8 +25,8 @@ export function OverviewTab({ onGo }: { onGo: (path: string) => void }) {
   return (
     <>
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Stat title="live đang phát" value={`${o.streamsLive}/${o.streamsWanted}`} hint="đang phát / cần phát" icon={<Radio size={28} color="#dc2626" />} tone={o.streamsLive < o.streamsWanted ? "amber" : "green"} />
-        <Stat title="live lỗi" value={o.streamsError} icon={<CircleAlert size={28} color="#dc2626" />} tone={o.streamsError ? "red" : undefined} />
+        <Stat title="Live đang phát" value={`${o.streamsLive}/${o.streamsWanted}`} hint="đang phát / cần phát" icon={<Radio size={28} color="#dc2626" />} tone={o.streamsLive < o.streamsWanted ? "amber" : "green"} />
+        <Stat title="Live lỗi" value={o.streamsError} icon={<CircleAlert size={28} color="#dc2626" />} tone={o.streamsError ? "red" : undefined} />
         <Stat title="VPS trực tuyến" value={`${o.machinesOnline}/${o.machinesTotal}`} icon={<Server size={28} color="#2563eb" />} tone={o.machinesOnline < o.machinesTotal ? "amber" : "green"} />
         <Stat title="Video sẵn sàng" value={o.assetsReady} icon={<Film size={28} color="#16a34a" />} />
         <Stat title="Video đang xử lý" value={o.assetsProcessing} icon={<Loader size={28} color="#2563eb" />} tone={o.assetsProcessing ? "blue" : undefined} />
